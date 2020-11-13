@@ -12,6 +12,7 @@ import os
 from mlp_numpy import MLP
 from modules import CrossEntropyModule
 import cifar10_utils
+import matplotlib.pyplot as plt
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '100'
@@ -24,6 +25,9 @@ EVAL_FREQ_DEFAULT = 100
 DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
 
 FLAGS = None
+
+N_FEATURES = 32 * 32* 3
+N_CLASSES = 10
 
 
 def accuracy(predictions, targets):
@@ -47,7 +51,9 @@ def accuracy(predictions, targets):
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    predictions = np.argmax(predictions, axis=1)
+    targets = np.argmax(targets, axis=1)
+    accuracy = (predictions==targets).sum() / len(targets)
     ########################
     # END OF YOUR CODE    #
     #######################
@@ -78,7 +84,65 @@ def train():
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    model = MLP(N_FEATURES, dnn_hidden_units, N_CLASSES)
+    train_accs = list()
+    train_losses = list()
+    test_accs = list()
+    test_losses = list()
+    loss_module = CrossEntropyModule()
+
+    dataset = cifar10_utils.get_cifar10()
+
+    for step in range(FLAGS.max_steps):
+        x, y = dataset["train"].next_batch(FLAGS.batch_size)
+        x = x.reshape(FLAGS.batch_size, -1)
+
+        preds = model.forward(x)
+        
+        loss = loss_module.forward(preds, y)
+
+        acc = accuracy(preds, y)
+
+        loss_dx = loss_module.backward(preds, y)
+        model.backward(loss_dx)
+
+        for i in range(len(model.list_modules)):
+            if i % 2 == 0:
+                model.list_modules[i].params["weight"] -= FLAGS.learning_rate * model.list_modules[i].grads["weight"]
+                model.list_modules[i].params["bias"] -= FLAGS.learning_rate * model.list_modules[i].grads["bias"]
+
+        if step % FLAGS.eval_freq == 0:
+            train_losses.append(loss)
+            train_accs.append(acc)
+
+            x_test, y_test = dataset["test"].images, dataset["test"].labels
+            x_test = x_test.reshape(x_test.shape[0], -1)
+
+            preds_test = model.forward(x_test)
+            test_losses.append(loss_module.forward(preds_test, y_test))
+            test_acc = accuracy(preds_test, y_test)
+            test_accs.append(test_acc)
+            print(f"step {step} -- acc {test_acc:.2f}")
+
+
+    # test_x = [i for i in range(FLAGS.eval_freq, FLAGS.max_steps+1, FLAGS.eval_freq)]
+    plt.plot(train_losses, c="b", label="Train Loss")
+    plt.plot(test_losses, c="g", label="Test Loss")
+    plt.legend(loc="upper left")
+    plt.title("Train and Test Losses of Numpy MLP")
+    plt.ylabel("Loss")
+    plt.xlabel("Number of Steps")
+
+    plt.savefig("./numpy_losses.pdf")
+
+    plt.plot(train_accs, c="b", label="Train Accuracy")
+    plt.plot(test_accs, c="g", label="Test Accuracy")
+    plt.legend(loc="upper left")
+    plt.title("Train and Test Accuracies of Numpy MLP")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Number of Steps")
+
+    plt.savefig("./numpy_accuracies.pdf")
     ########################
     # END OF YOUR CODE    #
     #######################

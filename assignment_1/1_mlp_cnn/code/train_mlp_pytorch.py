@@ -28,6 +28,8 @@ DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
 
 FLAGS = None
 
+N_FEATURES = 32 * 32* 3
+N_CLASSES = 10
 
 def accuracy(predictions, targets):
     """
@@ -50,12 +52,20 @@ def accuracy(predictions, targets):
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    pred_classes = np.argmax(predictions, axis=1)
+    accuracy = (pred_classes==targets).sum().item() / len(targets)
     ########################
     # END OF YOUR CODE    #
     #######################
     
     return accuracy
+
+def param_init(model, std=0.0001):
+    for name, param in model.named_parameters():
+        if name.endswith(".bias"):
+            param.data.fill_(0)
+        else:
+            param.data.normal_(std=std)
 
 
 def train():
@@ -79,12 +89,58 @@ def train():
     else:
         dnn_hidden_units = []
     
-    neg_slope = FLAGS.neg_slope
-    
+
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    
+    dataset = cifar10_utils.get_cifar10(one_hot=False)
+
+    model  = MLP(N_FEATURES, dnn_hidden_units, N_CLASSES)
+    param_init(model)
+    print(model)
+
+    loss_module = nn.CrossEntropyLoss()
+    sm = nn.Softmax(dim=1)
+    # optimiser = torch.optim.SGD(model.parameters(), lr=FLAGS.learning_rate, momentum=0.9)
+    optimiser = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate)
+    # momentum 0.9 and layers 1000,100 stays around 0.53 but goes up to 0.54
+    # momentum 0.9 and layers 500,100 with ReLU also goes around 0.52
+    # 
+    model.train()
+
+    for step in range(FLAGS.max_steps):
+        x, y = dataset["train"].next_batch(FLAGS.batch_size)
+        x = torch.from_numpy(x.reshape(FLAGS.batch_size, -1)).to(device)
+        y = torch.from_numpy(y).to(device)
+
+        preds = model(x)
+
+        loss = loss_module(preds, y.long())
+
+        optimiser.zero_grad()
+
+        loss.backward()
+
+        optimiser.step()
+
+        if step % FLAGS.eval_freq == 0:
+            model.eval()
+
+            with torch.no_grad():
+                x_test, y_test = dataset["test"].images, dataset["test"].labels
+                x_test = torch.from_numpy(x_test.reshape(x_test.shape[0], -1)).to(device)
+                y_test = torch.from_numpy(y_test).to(device)
+
+                preds_test = model(x_test)
+                preds_test = sm(preds_test)
+
+                acc = accuracy(preds_test, y_test)
+                print(f"step {step} -- ACC {acc:.2f}")
+                # return
+            
+            model.train()
     ########################
     # END OF YOUR CODE    #
     #######################

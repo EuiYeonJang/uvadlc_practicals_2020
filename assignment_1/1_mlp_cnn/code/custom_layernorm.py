@@ -38,9 +38,10 @@ class CustomLayerNormAutograd(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        
-        raise NotImplementedError
-        
+        self.n_neurons = n_neurons
+        self.eps = eps
+        self.gamma = nn.Parameter(torch.ones(n_neurons, 1), requires_grad=True)
+        self.beta = nn.Parameter(torch.zeros(n_neurons, 1), requires_grad=True)        
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -62,10 +63,14 @@ class CustomLayerNormAutograd(nn.Module):
         
         ########################
         # PUT YOUR CODE HERE  #
-        #######################
+        #######################      
+        assert input.shape[1] == self.n_neurons, "The shape of the input tensor is incorrect!" 
 
-        raise NotImplementedError
-
+        mu = torch.mean(input, dim=1, keepdim=True)        
+        variance = torch.var(input, dim=1, keepdim=True)
+        hat_input = (input - mu) / torch.sqrt(variance + self.eps)
+        
+        out = hat_input * self.gamma.T + self.beta.T
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -118,9 +123,16 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        mu = torch.mean(input, dim=1, keepdim=True)        
+        variance = torch.var(input, dim=1, keepdim=True)
+        sqrt_var = torch.sqrt(variance + eps)
+        hat_input = (input - mu) / sqrt_var
         
-        raise NotImplementedError
-
+        ctx.sqrt_var = sqrt_var
+        ctx.n_neurons = input.shape[1]
+        ctx.save_for_backward(hat_input, gamma, beta)
+        
+        out = hat_input * gamma.T + beta.T
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -147,9 +159,37 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        hat_input, gamma, beta = ctx.saved_tensors
+        grad_input = grad_gamma = grad_beta = None
 
-        raise NotImplementedError
+        if ctx.needs_input_grad[0]: 
+            # S = 14, M = 243
+            # should be S x M
+            dLdY_gamma = (grad_output * gamma)
+
+            # should be S x 1
+            b = torch.sum(dLdY_gamma, dim=1, keepdim=True) / ctx.n_neurons
+            # print("shape of b", b.shape)
+            
+            # should be S x 1
+            c = (hat_input * torch.sum(dLdY_gamma*hat_input, dim=1, keepdim=True)) / ctx.n_neurons
+            # print("shape of c", c.shape)
+
+            # should be S x M
+            nominator = dLdY_gamma - b - c
+            # print("subterm", nominator.shape)
+
+            # print("sqrt_var", ctx.sqrt_var.shape)
+            grad_input = nominator / ctx.sqrt_var 
+            # print("grad input", grad_input.shape, "hat input", hat_input.shape)
+
         
+        if ctx.needs_input_grad[1]:
+            grad_gamma = torch.sum(grad_output*hat_input, dim=0, keepdim=True).T.squeeze()
+
+        if ctx.needs_input_grad[2]:
+            grad_beta = torch.sum(grad_output, dim=0, keepdim=True).T.squeeze()
+
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -186,9 +226,10 @@ class CustomLayerNormManualModule(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-        
+        self.n_neurons = n_neurons
+        self.eps = eps
+        self.gamma = nn.Parameter(torch.ones(n_neurons, 1), requires_grad=True)
+        self.beta = nn.Parameter(torch.zeros(n_neurons, 1), requires_grad=True)        
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -211,8 +252,8 @@ class CustomLayerNormManualModule(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
+        assert input.shape[1] == self.n_neurons, "The shape of the input tensor is incorrect!"
+        # raise NotImplementedError
         
         ########################
         # END OF YOUR CODE    #

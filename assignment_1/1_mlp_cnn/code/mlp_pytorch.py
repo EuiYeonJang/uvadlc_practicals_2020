@@ -37,7 +37,23 @@ class MLP(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        raise NotImplementedError
+        super().__init__()
+
+        if len(n_hidden) == 0:
+            # last softmax layer not included because of CrossEntropyLoss
+            self.list_modules = [nn.Linear(n_inputs, n_classes)]
+
+        else:
+            self.list_modules = [nn.Linear(n_inputs, n_hidden[0]), nn.ELU()]
+
+            for i in range(1, len(n_hidden)):
+                self.list_modules.extend([nn.Linear(n_hidden[i-1], n_hidden[i]), nn.ELU()])
+            
+            # last softmax layer not included because of CrossEntropyLoss
+            self.list_modules.extend([nn.Linear(n_hidden[-1], n_classes)])
+
+        self.list_modules = nn.ModuleList(self.list_modules)
+
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -59,7 +75,9 @@ class MLP(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        raise NotImplementedError
+        for m in self.list_modules:
+            x = m(x)
+        out = x
         ########################
         # END OF YOUR CODE    #
         #######################

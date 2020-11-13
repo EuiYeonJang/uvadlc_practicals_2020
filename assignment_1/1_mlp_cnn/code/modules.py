@@ -28,9 +28,21 @@ class LinearModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        init_mu = 0
+        init_sigma = 0.0001
 
-        raise NotImplementedError
-        
+        self.in_features = in_features
+        self.out_features = out_features
+
+        self.params = {
+            "weight": np.random.normal(init_mu, init_sigma, (out_features, in_features)),
+            "bias": np.zeros((1,out_features))
+        }
+
+        self.grads = {
+            "weight": np.zeros((out_features, in_features)), 
+            "bias": np.zeros((1, out_features))
+        }        
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -53,9 +65,8 @@ class LinearModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-        
+        self.x = x
+        out = np.matmul(x, self.params["weight"].T) + self.params["bias"]
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -79,9 +90,12 @@ class LinearModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
+        self.grads["weight"] = np.matmul(dout.T, self.x)
         
+        bias_ones = np.ones((1, dout.shape[0]))
+        self.grads["bias"] = np.matmul(bias_ones, dout)
+
+        dx = np.matmul(dout, self.params["weight"])
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -112,9 +126,10 @@ class SoftMaxModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-        
+        self.x = x
+        exp_x = np.exp(x - np.max(x))
+        out = exp_x / np.sum(exp_x, axis=1, keepdims=True)
+        self.softmax = out       
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -136,10 +151,18 @@ class SoftMaxModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        s, c = dout.shape
 
-        raise NotImplementedError
+        # when i == j
+        fst_case = np.einsum("ij,jk->ijk", self.softmax, np.eye(c, c))
         
-        ########################
+        # when i != j
+        snd_case = np.einsum("ij,ik->ijk", self.softmax, self.softmax)
+        
+        der_softmax = fst_case - snd_case
+        
+        dx = np.einsum("ijk,ik->ij", der_softmax, dout)
+        #######################
         # END OF YOUR CODE    #
         #######################
         
@@ -167,9 +190,9 @@ class CrossEntropyModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-        
+        # batch_loss = np.sum(y * np.log(x, where=(x>0)) , axis=1)
+        batch_loss = np.sum(y * np.log(x) , axis=1)
+        out = (-1/x.shape[0]) * np.sum(batch_loss)
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -192,9 +215,7 @@ class CrossEntropyModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-        
+        dx = -(1/x.shape[0]) * np.where(x==0, 0, y / x)
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -224,9 +245,8 @@ class ELUModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        
-        raise NotImplementedError
-        
+        self.x = x
+        out = np.where(x>=0, x, np.exp(x)-1)
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -248,9 +268,7 @@ class ELUModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-
-        raise NotImplementedError
-
+        dx = dout * np.where(self.x>=0, 1, np.exp(self.x))
         ########################
         # END OF YOUR CODE    #
         #######################
