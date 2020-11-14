@@ -124,7 +124,7 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
         # PUT YOUR CODE HERE  #
         #######################
         mu = torch.mean(input, dim=1, keepdim=True)        
-        variance = torch.var(input, dim=1, keepdim=True)
+        variance = torch.var(input, unbiased=False, dim=1, keepdim=True)
         sqrt_var = torch.sqrt(variance + eps)
         hat_input = (input - mu) / sqrt_var
         
@@ -169,19 +169,14 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
 
             # should be S x 1
             b = torch.sum(dLdY_gamma, dim=1, keepdim=True) / ctx.n_neurons
-            # print("shape of b", b.shape)
             
             # should be S x 1
             c = (hat_input * torch.sum(dLdY_gamma*hat_input, dim=1, keepdim=True)) / ctx.n_neurons
-            # print("shape of c", c.shape)
-
+            
             # should be S x M
             nominator = dLdY_gamma - b - c
-            # print("subterm", nominator.shape)
 
-            # print("sqrt_var", ctx.sqrt_var.shape)
             grad_input = nominator / ctx.sqrt_var 
-            # print("grad input", grad_input.shape, "hat input", hat_input.shape)
 
         
         if ctx.needs_input_grad[1]:
@@ -253,6 +248,8 @@ class CustomLayerNormManualModule(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         assert input.shape[1] == self.n_neurons, "The shape of the input tensor is incorrect!"
+
+        out = CustomLayerNormManualFunction.apply(input, self.gamma, self.beta, self.eps)
         # raise NotImplementedError
         
         ########################
