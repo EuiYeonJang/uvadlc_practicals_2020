@@ -113,17 +113,18 @@ def train():
     # PUT YOUR CODE HERE  #
     #######################
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    
+    print(device)
+
     dataset = cifar10_utils.get_cifar10(one_hot=False)
 
-    model  = MLP(N_FEATURES, dnn_hidden_units, N_CLASSES)
+    model  = MLP(N_FEATURES, dnn_hidden_units, N_CLASSES).to(device)
     param_init(model)
     print(model)
 
     loss_module = nn.CrossEntropyLoss()
     sm = nn.Softmax(dim=1)
+
     optimiser = torch.optim.SGD(model.parameters(), lr=FLAGS.learning_rate, momentum=0.9)
-    # optimiser = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate, )
     
     model.train()
 
@@ -161,15 +162,15 @@ def train():
 
                 preds_test = model(x_test)
 
-                loss = loss_module(preds_test, y_test.long())
+                test_loss = loss_module(preds_test, y_test.long())
 
                 preds_test = sm(preds_test)
-                acc = accuracy(preds_test, y_test)
+                test_acc = accuracy(preds_test, y_test)
                 
-                test_losses.append(loss)
-                test_accs.append(acc)
+                test_losses.append(test_loss)
+                test_accs.append(test_acc)
 
-                print(f"step {step} -- ACC {acc:.2f}")
+                print(f"step {step} -- train ACC {acc:.2f} -- test ACC {test_acc:.2f}")
             
             model.train()
 

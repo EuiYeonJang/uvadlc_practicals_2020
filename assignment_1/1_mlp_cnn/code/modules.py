@@ -31,12 +31,9 @@ class LinearModule(object):
         init_mu = 0
         init_sigma = 0.0001
 
-        self.in_features = in_features
-        self.out_features = out_features
-
         self.params = {
             "weight": np.random.normal(init_mu, init_sigma, (out_features, in_features)),
-            "bias": np.zeros((1,out_features))
+            "bias": np.zeros((1, out_features))
         }
 
         self.grads = {
@@ -90,11 +87,15 @@ class LinearModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        
+        # gradient wrt weights
         self.grads["weight"] = np.matmul(dout.T, self.x)
         
+        # gradient wrt bias
         bias_ones = np.ones((1, dout.shape[0]))
         self.grads["bias"] = np.matmul(bias_ones, dout)
 
+        # gradient wrt input
         dx = np.matmul(dout, self.params["weight"])
         ########################
         # END OF YOUR CODE    #
@@ -126,7 +127,6 @@ class SoftMaxModule(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        self.x = x
         exp_x = np.exp(x - np.max(x))
         out = exp_x / np.sum(exp_x, axis=1, keepdims=True)
         self.softmax = out       
@@ -152,6 +152,9 @@ class SoftMaxModule(object):
         # PUT YOUR CODE HERE  #
         #######################
         s, c = dout.shape
+
+        # NOTE: inspiration from https://rockt.github.io/2018/04/30/einsum
+        # and https://themaverickmeerkat.com/2019-10-23-Softmax/
 
         # when i == j
         fst_case = np.einsum("ij,jk->ijk", self.softmax, np.eye(c, c))

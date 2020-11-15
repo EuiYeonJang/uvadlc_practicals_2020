@@ -146,12 +146,11 @@ def train():
             test_losses.append(test_loss)
             test_accs.append(test_acc)
             
-            print(f"step {step} -- ACC {test_acc:.2f}")
+            print(f"step {step} -- train ACC {acc:.2f} -- test ACC {test_acc:.2f}")
 
 
     plot(train_losses, test_losses, "Loss")
     plot(train_accs, test_accs, "Accuracy")
-
     ########################
     # END OF YOUR CODE    #
     #######################

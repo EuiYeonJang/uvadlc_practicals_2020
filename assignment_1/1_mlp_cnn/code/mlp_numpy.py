@@ -95,9 +95,11 @@ class MLP(object):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        
+        # iterate through the list of modules in reverse
         for i in range(len(self.list_modules)-1, -1, -1):
             dout = self.list_modules[i].backward(dout)
-        
+            
         ########################
         # END OF YOUR CODE    #
         #######################

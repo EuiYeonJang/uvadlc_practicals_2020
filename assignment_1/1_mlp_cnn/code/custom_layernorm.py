@@ -67,7 +67,7 @@ class CustomLayerNormAutograd(nn.Module):
         assert input.shape[1] == self.n_neurons, "The shape of the input tensor is incorrect!" 
 
         mu = torch.mean(input, dim=1, keepdim=True)        
-        variance = torch.var(input, dim=1, keepdim=True)
+        variance = torch.var(input, dim=1,  unbiased=False, keepdim=True)
         hat_input = (input - mu) / torch.sqrt(variance + self.eps)
         
         out = hat_input * self.gamma.T + self.beta.T
@@ -124,7 +124,7 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
         # PUT YOUR CODE HERE  #
         #######################
         mu = torch.mean(input, dim=1, keepdim=True)        
-        variance = torch.var(input, unbiased=False, dim=1, keepdim=True)
+        variance = torch.var(input, dim=1, unbiased=False, keepdim=True)
         sqrt_var = torch.sqrt(variance + eps)
         hat_input = (input - mu) / sqrt_var
         
@@ -162,22 +162,17 @@ class CustomLayerNormManualFunction(torch.autograd.Function):
         hat_input, gamma, beta = ctx.saved_tensors
         grad_input = grad_gamma = grad_beta = None
 
-        if ctx.needs_input_grad[0]: 
-            # S = 14, M = 243
+        if ctx.needs_input_grad[0]:
             # should be S x M
             dLdY_gamma = (grad_output * gamma)
-
             # should be S x 1
             b = torch.sum(dLdY_gamma, dim=1, keepdim=True) / ctx.n_neurons
-            
             # should be S x 1
             c = (hat_input * torch.sum(dLdY_gamma*hat_input, dim=1, keepdim=True)) / ctx.n_neurons
-            
             # should be S x M
             nominator = dLdY_gamma - b - c
 
             grad_input = nominator / ctx.sqrt_var 
-
         
         if ctx.needs_input_grad[1]:
             grad_gamma = torch.sum(grad_output*hat_input, dim=0, keepdim=True).T.squeeze()
@@ -249,9 +244,8 @@ class CustomLayerNormManualModule(nn.Module):
         #######################
         assert input.shape[1] == self.n_neurons, "The shape of the input tensor is incorrect!"
 
-        out = CustomLayerNormManualFunction.apply(input, self.gamma, self.beta, self.eps)
-        # raise NotImplementedError
-        
+        cln_mf = CustomLayerNormManualFunction()
+        out = cln_mf.apply(input, self.gamma, self.beta, self.eps)
         ########################
         # END OF YOUR CODE    #
         #######################
