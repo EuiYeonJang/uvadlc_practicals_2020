@@ -11,6 +11,7 @@ import numpy as np
 import os
 from convnet_pytorch import ConvNet
 import cifar10_utils
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
@@ -26,6 +27,27 @@ OPTIMIZER_DEFAULT = 'ADAM'
 DATA_DIR_DEFAULT = './cifar10/cifar-10-batches-py'
 
 FLAGS = None
+
+N_CHANNELS = 3
+N_CLASSES = 10
+
+
+def plot(train_list, test_list, name):
+    x_ind = [i for i in range(0, FLAGS.max_steps, FLAGS.eval_freq)]
+    select_train_list = [train_list[i] for i in x_ind]
+    plt.plot(train_list, c="tab:cyan", label=f"Train {name} (all)")
+    plt.plot(x_ind, select_train_list, c="tab:blue", label=f"Train {name}")
+    plt.plot(x_ind, test_list, c="tab:green", label=f"Test {name}")
+    if name == "Loss":
+        plt.legend(loc="upper right")
+    else:
+        plt.legend(loc="lower right")
+    plt.title(f"Train and Test {name} of ConvNet")
+    plt.ylabel(name)
+    plt.xlabel("Number of Steps")
+
+    plt.savefig(f"./convnet_{name.lower()}.pdf")
+    plt.clf()
 
 
 def accuracy(predictions, targets):
@@ -49,7 +71,8 @@ def accuracy(predictions, targets):
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    pred_classes = torch.argmax(predictions, dim=1)
+    accuracy = (pred_classes==targets).sum().item() / len(targets)
     ########################
     # END OF YOUR CODE    #
     #######################
@@ -73,7 +96,66 @@ def train():
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    dataset = cifar10_utils.get_cifar10(one_hot=False)
+    
+    model = ConvNet(N_CHANNELS, N_CLASSES)
+    print(model)
+
+    loss_module = nn.CrossEntropyLoss()
+    sm = nn.Softmax(dim=1)
+    optimiser = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate)
+
+    model.train()
+
+    train_losses = list()
+    test_losses = list()
+    train_accs = list()
+    test_accs = list()
+
+    for step in range(FLAGS.max_steps):
+        x, y = dataset["train"].next_batch(FLAGS.batch_size)
+        x = torch.from_numpy(x).to(device)
+        y = torch.from_numpy(y).to(device)
+
+        preds = model(x)
+
+        loss = loss_module(preds, y.long())
+        acc = accuracy(preds, y)
+
+        train_losses.append(loss)
+        train_accs.append(acc)
+        
+        optimiser.zero_grad()
+
+        loss.backward()
+
+        optimiser.step()
+
+        if step % FLAGS.eval_freq == 0:
+            model.eval()
+
+            with torch.no_grad():
+                x_test, y_test = dataset["test"].images, dataset["test"].labels
+                x_test = torch.from_numpy(x_test).to(device)
+                y_test = torch.from_numpy(y_test).to(device)
+
+                preds_test = model(x_test)
+
+                loss = loss_module(preds_test, y_test.long())
+
+                preds_test = sm(preds_test)
+                acc = accuracy(preds_test, y_test)
+                
+                test_losses.append(loss)
+                test_accs.append(acc)
+
+                print(f"step {step} -- ACC {acc:.2f}")
+            model.train()
+
+    plot(train_losses, test_losses, "Loss")
+    plot(train_accs, test_accs, "Accuracy")
     ########################
     # END OF YOUR CODE    #
     #######################
