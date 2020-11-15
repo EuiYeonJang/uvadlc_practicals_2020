@@ -39,7 +39,7 @@ def plot(train_list, test_list, name):
     plt.plot(x_ind, select_train_list, c="tab:blue", label=f"Train {name}")
     plt.plot(x_ind, test_list, c="tab:green", label=f"Test {name}")
     if name == "Loss":
-        plt.legend(loc="bottom left")
+        plt.legend(loc="lower left")
     else:
         plt.legend(loc="upper left")
     plt.title(f"Train and Test {name} of Pytorch MLP")
@@ -162,6 +162,8 @@ def train():
                 preds_test = model(x_test)
 
                 loss = loss_module(preds_test, y_test.long())
+
+                preds_test = sm(preds_test)
                 acc = accuracy(preds_test, y_test)
                 
                 test_losses.append(loss)
