@@ -1,2 +1,3 @@
 *.pyc
 cifar10
+./assignment_1/1_mlp_cnn/code/figures/
