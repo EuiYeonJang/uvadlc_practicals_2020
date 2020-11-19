@@ -186,14 +186,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # dataset
-    parser.add_argument('--dataset', type=str, default='randomcomb',
+    parser.add_argument('--dataset', type=str, default='bss',
                         choices=['randomcomb', 'bss', 'bipalindrome'],
                         help='Dataset to be trained on.')
     # Model params
-    parser.add_argument('--model_type', type=str, default='biLSTM',
+    parser.add_argument('--model_type', type=str, default='LSTM',
                         choices=['LSTM', 'biLSTM', 'GRU', 'peepLSTM'],
                         help='Model type: LSTM, biLSTM, GRU or peepLSTM')
-    parser.add_argument('--input_length', type=int, default=6,
+    parser.add_argument('--input_length', type=int, default=4,
                         help='Length of an input sequence')
     parser.add_argument('--input_dim', type=int, default=1,
                         help='Dimensionality of input sequence')
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     # Training params
     parser.add_argument('--batch_size', type=int, default=256,
                         help='Number of examples to process in a batch')
-    parser.add_argument('--learning_rate', type=float, default=0.001,
+    parser.add_argument('--learning_rate', type=float, default=0.0001,
                         help='Learning rate')
     parser.add_argument('--train_steps', type=int, default=3000,
                         help='Number of training steps')
