@@ -40,10 +40,12 @@ class GRU(nn.Module):
         weight_size = embedding_size + hidden_dim
         self.W_z = nn.Parameter(torch.empty(hidden_dim, weight_size))
         self.W_r = nn.Parameter(torch.empty(hidden_dim, weight_size))
-        self.W = nn.Parameter(torch.empty(weight_size))
+        self.W = nn.Parameter(torch.empty(hidden_dim, weight_size))
         self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim))
 
         self.b_p = nn.Parameter(torch.zeros(num_classes))
+
+        self.init_weights()
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -55,8 +57,8 @@ class GRU(nn.Module):
 
 
     def init_states(self):
-        self.c = torch.zeros(self._batch_size, _hidden_dim).to(self._device)
-        self.h = torch.zeros(self._batch_size, _hidden_dim).to(self._device)
+        self.c = torch.zeros(self._batch_size, self._hidden_dim).to(self._device)
+        self.h = torch.zeros(self._batch_size, self._hidden_dim).to(self._device)
 
 
     def forward(self, x):
@@ -64,29 +66,30 @@ class GRU(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        self.init_states()
         x = x.squeeze()
         embed_x = self.embed(x.long())
         for t in range(self._seq_length):
             x_t = embed_x[:, t]
             
             # Eq 29
-            h_prev_x_t = torch.hstack((self.h, x_t))
+            h_prev_x_t = torch.cat((self.h, x_t), 1)
             z = self.sigmoid(h_prev_x_t@self.W_z.T)
             # Eq 30
             r = self.sigmoid(h_prev_x_t@self.W_r.T)
             
             # Eq 31
-            r_h_prev_x_t = torch.hstack((self.h*r, x_t))
+            r_h_prev_x_t = torch.cat((self.h*r, x_t), 1)
             h_tilde = self.tanh(r_h_prev_x_t@self.W.T)
             
             # Eq 32
             self.h = (1 - z)*self.h + z*h_tilde
 
             # Eq 33
-            p = self.t@self.W_ph + self.b_p
+            p = self.h@self.W_ph.T + self.b_p
 
         # no need for softmax since using cross entropy
-        return y
+        return p
 
         ########################
         # END OF YOUR CODE    #
