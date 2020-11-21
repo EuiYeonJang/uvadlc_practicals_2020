@@ -26,13 +26,6 @@ class LSTMCell(nn.Module):
         self.W_fh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
         self.W_oh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
 
-        # hidden * hidden <= 4
-        # input * hidden <= 4
-        # output * hidden 
-        # hidden <= 4
-        # output
-        # total = hidden( 4 (input + hidden + 1) +  output) + output
-
         # biases
         self.b_g = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True)
         self.b_i = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True)
@@ -47,19 +40,19 @@ class LSTMCell(nn.Module):
         # non-linearity
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
 
 
     def init_params(self):
-        nn.init.kaiming_normal_(self.W_gx)
-        nn.init.kaiming_normal_(self.W_ix)
-        nn.init.kaiming_normal_(self.W_fx)
-        nn.init.kaiming_normal_(self.W_ox)
-        nn.init.kaiming_normal_(self.W_gh)
-        nn.init.kaiming_normal_(self.W_ih)
-        nn.init.kaiming_normal_(self.W_fh)
-        nn.init.kaiming_normal_(self.W_oh)
-        nn.init.kaiming_normal_(self.W_ph)
+        nn.init.kaiming_normal_(self.W_gx, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_ix, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_fx, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_ox, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_gh, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_ih, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_fh, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_oh, nonlinearity="linear")
+        nn.init.kaiming_normal_(self.W_ph, nonlinearity="linear")
 
 
     def forward(self, x, c, h):
@@ -78,9 +71,10 @@ class LSTMCell(nn.Module):
         h = self.tanh(c) * o
 
         # Eq 10
-        p = h@self.W_ph.T
-        p += self.b_p
+        p = h@self.W_ph.T + self.b_p
+
         y = self.softmax(p)
+
         return y, c, h
 
 
@@ -94,7 +88,9 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         self.seq_length = seq_length
-        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1)
+        self.hidden_dim = hidden_dim
+        embedding_size = int(hidden_dim/2) 
+        self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
 
         self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device)
         
@@ -107,8 +103,8 @@ class LSTM(nn.Module):
         #######################
 
     def init_params(self):
-        nn.init.kaiming_normal_(self.c) #, mode='fan_in', nonlinearity='relu')
-        nn.init.kaiming_normal_(self.h) #, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.c, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.h, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
         
 
     def forward(self, x):
@@ -116,9 +112,15 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         x = x.squeeze()
+        self.c = torch.empty(self.hidden_dim, self.hidden_dim)
+        self.h = torch.empty(self.hidden_dim, self.hidden_dim)
+        self.init_params()
+
         embed_x = self.embedding(x.long())
         for t in range(self.seq_length):
+            # y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
             y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
+
 
         return y
         ########################
