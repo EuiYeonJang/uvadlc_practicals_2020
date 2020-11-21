@@ -83,10 +83,10 @@ class LSTM(nn.Module):
 
         # self.cell = LSTMCell(embedding_size, hidden_dim, num_classes, device)
         # Weights
-        self.W_gx = nn.Parameter(torch.empty(hidden_dim, input_dim)) 
-        self.W_ix = nn.Parameter(torch.empty(hidden_dim, input_dim)) 
-        self.W_fx = nn.Parameter(torch.empty(hidden_dim, input_dim)) 
-        self.W_ox = nn.Parameter(torch.empty(hidden_dim, input_dim)) 
+        self.W_gx = nn.Parameter(torch.empty(hidden_dim, embedding_size)) 
+        self.W_ix = nn.Parameter(torch.empty(hidden_dim, embedding_size)) 
+        self.W_fx = nn.Parameter(torch.empty(hidden_dim, embedding_size)) 
+        self.W_ox = nn.Parameter(torch.empty(hidden_dim, embedding_size)) 
 
         self.W_gh = nn.Parameter(torch.empty(hidden_dim, hidden_dim)) 
         self.W_ih = nn.Parameter(torch.empty(hidden_dim, hidden_dim)) 
@@ -136,14 +136,14 @@ class LSTM(nn.Module):
             # y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
             # y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
             # Eq 4
-            x = embed_x[:, t]
-            g = self.tanh(x@self.W_gx.T + self.h@self.W_gh.T + self.b_g)
+            x_t = embed_x[:, t]
+            g = self.tanh(x_t@self.W_gx.T + self.h@self.W_gh.T + self.b_g)
             # Eq 5
-            i = self.sigmoid(x@self.W_ix.T + self.h@self.W_ih.T + self.b_i)
+            i = self.sigmoid(x_t@self.W_ix.T + self.h@self.W_ih.T + self.b_i)
             # Eq 6
-            f = self.sigmoid(x@self.W_fx.T + self.h@self.W_fh.T + self.b_f)
+            f = self.sigmoid(x_t@self.W_fx.T + self.h@self.W_fh.T + self.b_f)
             # Eq 7
-            o = self.sigmoid(x@self.W_ox.T + self.h@self.W_oh.T + self.b_o)
+            o = self.sigmoid(x_t@self.W_ox.T + self.h@self.W_oh.T + self.b_o)
 
             # Eq 8
             self.c = g * i + self.c * f
