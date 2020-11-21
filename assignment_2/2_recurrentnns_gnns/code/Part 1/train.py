@@ -171,6 +171,8 @@ def train(config):
                 pkl.dump(acc_list, f)
             break
 
+        prev_acc = accuracy
+
         # Just for time measurement
         t2 = time.time()
         examples_per_second = config.batch_size/float(t2-t1)
@@ -193,6 +195,7 @@ def train(config):
                 pkl.dump(acc_list, f)
             break
 
+        return
     print('Done training.')
     ###########################################################################
     ###########################################################################
