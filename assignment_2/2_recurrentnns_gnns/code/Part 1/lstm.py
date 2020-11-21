@@ -106,14 +106,14 @@ class LSTM(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        # x = x.squeeze()
+        x = x.squeeze()
         self.init_states()
 
         embed_x = self.embedding(x.long())
 
         for t in range(self.seq_length):
-            y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
-            # y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
+            # y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
+            y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
 
         return y
         ########################
