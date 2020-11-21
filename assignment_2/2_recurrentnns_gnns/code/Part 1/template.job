@@ -22,8 +22,7 @@ module load Anaconda3/2018.12
 source activate dl2020
 
 
-$HPARAMS_FILE=./hyperparam.txt
-CHECKPOINTDIR=./summaries/array_job_${SLURM_ARRAY_JOB_ID}
+HPARAMS_FILE=./hyperparam.txt
 
 # Good practice: define your directory where to save the models, and copy the job file to it
 # Run your code
