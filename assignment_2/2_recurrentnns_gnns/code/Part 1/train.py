@@ -50,11 +50,11 @@ def train(config):
 
     # Initialize the device which to run the model on
     device = torch.device(config.device)
-    # print(device)
+    print(device)
 
     # Load dataset
     if config.dataset == 'randomcomb':
-        # print('Load random combinations dataset ...')
+        print('Load random combinations dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = config.input_length
         dataset = datasets.RandomCombinationsDataset(config.input_length)
@@ -62,7 +62,7 @@ def train(config):
                                  drop_last=True)
 
     elif config.dataset == 'bss':
-        # print('Load bss dataset ...')
+        print('Load bss dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = 2
         config.input_dim = 3
@@ -73,7 +73,7 @@ def train(config):
         config.input_length = 4 * config.input_length
 
     elif config.dataset == 'bipalindrome':
-        # print('Load binary palindrome dataset ...')
+        print('Load binary palindrome dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = config.input_length
         dataset = datasets.BinaryPalindromeDataset(config.input_length)
@@ -86,7 +86,7 @@ def train(config):
 
     # Setup the model that we are going to use
     if config.model_type == 'LSTM':
-        # print("Initializing LSTM model ...")
+        print("Initializing LSTM model ...")
         model = LSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -94,7 +94,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'biLSTM':
-        # print("Initializing bidirectional LSTM model...")
+        print("Initializing bidirectional LSTM model...")
         model = biLSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -102,7 +102,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'GRU':
-        # print("Initializing GRU model ...")
+        print("Initializing GRU model ...")
         model = GRU(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -110,7 +110,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'peepLSTM':
-        # print("Initializing peephole LSTM model ...")
+        print("Initializing peephole LSTM model ...")
         model = peepLSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -121,7 +121,7 @@ def train(config):
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
-    delta_threshold = 0.01
+    delta_threshold = 0.05
     no_change = 0
     prev_acc = 0
     acc_list = list()
@@ -167,7 +167,7 @@ def train(config):
             no_change = 0
 
         if no_change > 5:
-            with open(f"./summaries/seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
+            with open(f"./{config.summary_path}/seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
                 pkl.dump(acc_list, f)
             break
 
@@ -175,23 +175,25 @@ def train(config):
         t2 = time.time()
         examples_per_second = config.batch_size/float(t2-t1)
 
-        # if step % 60 == 0:
+        if step % 60 == 0:
 
-            # print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, \
-                #    Examples/Sec = {:.2f}, "
-                #   "Accuracy = {:.2f}, Loss = {:.3f}".format(
-                #     datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                #     config.train_steps, config.batch_size, examples_per_second,
-                #     accuracy, loss
-                #     ))
+            print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, \
+                   Examples/Sec = {:.2f}, "
+                  "Accuracy = {:.2f}, Loss = {:.3f}".format(
+                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                    config.train_steps, config.batch_size, examples_per_second,
+                    accuracy, loss
+                    ))
 
         # Check if training is finished
         if step == config.train_steps:
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
+            with open(f"./{config.summary_path}/seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
+                pkl.dump(acc_list, f)
             break
 
-    # print('Done training.')
+    print('Done training.')
     ###########################################################################
     ###########################################################################
 
@@ -236,7 +238,7 @@ if __name__ == "__main__":
                         help='Log device placement for debugging')
     parser.add_argument('--summary_path', type=str, default="./summaries/",
                         help='Output path for summaries')
-    parser.add_argument('--seed', type=str, default=0,
+    parser.add_argument('--seed', type=int, default=0,
                         help='Specify seed')
 
     config = parser.parse_args()
