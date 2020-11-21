@@ -120,8 +120,8 @@ class LSTM(nn.Module):
                 nn.init.kaiming_normal_(param, nonlinearity="linear")
 
     def init_states(self): 
-        self.c = torch.zeros(self.batch_size, self.hidden_dim)
-        self.h = torch.zeros(self.batch_size, self.hidden_dim)
+        self.c = torch.zeros(self.batch_size, self.hidden_dim).to(device)
+        self.h = torch.zeros(self.batch_size, self.hidden_dim).to(device)
 
     def forward(self, x):
         ########################
