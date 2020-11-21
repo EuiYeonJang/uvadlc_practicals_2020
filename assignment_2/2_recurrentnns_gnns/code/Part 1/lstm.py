@@ -89,6 +89,7 @@ class LSTM(nn.Module):
         #######################
         self.seq_length = seq_length
         self.hidden_dim = hidden_dim
+        self.device = device
         embedding_size = int(hidden_dim/2) 
         # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
         self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1)
@@ -113,8 +114,8 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         x = x.squeeze()
-        self.c = torch.empty(self.hidden_dim, self.hidden_dim).to(device)
-        self.h = torch.empty(self.hidden_dim, self.hidden_dim).to(device)
+        self.c = torch.empty(self.hidden_dim, self.hidden_dim).to(self.device)
+        self.h = torch.empty(self.hidden_dim, self.hidden_dim).to(self.device)
         self.init_params()
 
         embed_x = self.embedding(x.long())
