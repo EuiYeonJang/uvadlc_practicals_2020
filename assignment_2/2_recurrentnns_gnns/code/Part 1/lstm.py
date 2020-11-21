@@ -16,10 +16,10 @@ class LSTMCell(nn.Module):
         super().__init__()
 
         # Weights
-        self.W_gx = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_ix = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_fx = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_ox = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
+        self.W_gx = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
+        self.W_ix = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
+        self.W_fx = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
+        self.W_ox = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
 
         self.W_gh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
         self.W_ih = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
@@ -56,14 +56,16 @@ class LSTMCell(nn.Module):
 
 
     def forward(self, x, c, h):
+        print(x.shape)
+        print(self.W_gx.T.shape)
         # Eq 4d
-        g = self.tanh(x.T @ self.W_gx + h@self.W_gh.T + self.b_g)
+        g = self.tanh(x@self.W_gx.T + h@self.W_gh.T + self.b_g)
         # Eq 5
-        i = self.sigmoid(x.T @ self.W_ix + h@self.W_ih.T + self.b_i)
+        i = self.sigmoid(x@self.W_ix.T + h@self.W_ih.T + self.b_i)
         # Eq 6
-        f = self.sigmoid(x.T @ self.W_fx + h@self.W_fh.T + self.b_f)
+        f = self.sigmoid(x@self.W_fx.T + h@self.W_fh.T + self.b_f)
         # Eq 7
-        o = self.sigmoid(x.T @ self.W_ox + h@self.W_oh.T + self.b_o)
+        o = self.sigmoid(x@self.W_ox.T + h@self.W_oh.T + self.b_o)
 
         # Eq 8
         c = g * i + c * f
@@ -90,11 +92,11 @@ class LSTM(nn.Module):
         self.seq_length = seq_length
         self.hidden_dim = hidden_dim
         self.device = device
-        embedding_size = int(hidden_dim/2) 
+        embedding_size = 10 #int(hidden_dim/2) 
         # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
-        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1).to(device)
+        self.embedding = nn.Embedding(input_dim, embedding_size).to(device)
 
-        self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device).to(device)
+        self.cell = LSTMCell(embedding_size, hidden_dim, num_classes, device).to(device)
         
         self.c = torch.empty(hidden_dim, hidden_dim).to(device)
         self.h = torch.empty(hidden_dim, hidden_dim).to(device)
