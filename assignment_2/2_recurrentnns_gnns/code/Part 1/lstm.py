@@ -91,6 +91,7 @@ class LSTM(nn.Module):
     def init_weights(self):
         for name, param in self.named_parameters():
             if name.startswith("cell.W_"):
+                print(name)
                 nn.init.kaiming_normal_(param, nonlinearity="linear")
 
     def init_states(self): 
