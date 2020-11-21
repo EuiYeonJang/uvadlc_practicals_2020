@@ -2,13 +2,13 @@
 
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=Q1.3
+#SBATCH --job-name=Q1.4
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
-#SBATCH --time=04:00:00
+#SBATCH --time=01:00:00
 #SBATCH --mem=32000M
 #SBATCH --array=1-9%8
-#SBATCH --output=slurm_array_testing_%A_%a.out
+#SBATCH --output=./summaries/experiment_%a.out
 
 module purge
 module load 2019
