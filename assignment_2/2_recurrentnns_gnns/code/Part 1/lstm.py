@@ -40,7 +40,7 @@ class LSTMCell(nn.Module):
         # non-linearity
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=-1)
 
 
     def init_params(self):
@@ -73,9 +73,9 @@ class LSTMCell(nn.Module):
         # Eq 10
         p = h@self.W_ph.T + self.b_p
 
-        y = self.softmax(p)
+        # y = self.softmax(p)
 
-        return y, c, h
+        return p, c, h
 
 
 class LSTM(nn.Module):
@@ -90,7 +90,8 @@ class LSTM(nn.Module):
         self.seq_length = seq_length
         self.hidden_dim = hidden_dim
         embedding_size = int(hidden_dim/2) 
-        self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
+        # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
+        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1)
 
         self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device)
         

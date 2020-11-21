@@ -118,7 +118,7 @@ def train(config):
         ).to(device)
 
     # Setup the loss and optimizer
-    loss_function = torch.nn.NLLLoss()
+    loss_function = torch.nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
