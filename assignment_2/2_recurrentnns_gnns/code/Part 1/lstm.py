@@ -91,17 +91,13 @@ class LSTM(nn.Module):
         #######################
         self.seq_length = seq_length
         self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
         self.device = device
         embedding_size = 10 #int(hidden_dim/2) 
         # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
         self.embedding = nn.Embedding(input_dim, embedding_size).to(device)
 
         self.cell = LSTMCell(embedding_size, hidden_dim, num_classes, device).to(device)
-        
-        self.c = torch.empty(hidden_dim, hidden_dim).to(device)
-        self.h = torch.empty(hidden_dim, hidden_dim).to(device)
-
-        self.init_params()
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -116,11 +112,12 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         x = x.squeeze()
-        self.c = torch.empty(self.hidden_dim, self.hidden_dim).to(self.device)
-        self.h = torch.empty(self.hidden_dim, self.hidden_dim).to(self.device)
+        self.c = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
+        self.h = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
         self.init_params()
 
         embed_x = self.embedding(x.long())
+
         for t in range(self.seq_length):
             # y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
             y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
