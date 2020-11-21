@@ -16,24 +16,24 @@ class LSTMCell(nn.Module):
         super().__init__()
 
         # Weights
-        self.W_gx = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
-        self.W_ix = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
-        self.W_fx = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
-        self.W_ox = nn.Parameter(torch.empty(hidden_dim, input_dim), requires_grad=True).to(device) 
+        self.W_gx = nn.Parameter(torch.empty(hidden_dim, input_dim)).to(device) 
+        self.W_ix = nn.Parameter(torch.empty(hidden_dim, input_dim)).to(device) 
+        self.W_fx = nn.Parameter(torch.empty(hidden_dim, input_dim)).to(device) 
+        self.W_ox = nn.Parameter(torch.empty(hidden_dim, input_dim)).to(device) 
 
-        self.W_gh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_ih = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_fh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
-        self.W_oh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True).to(device) 
+        self.W_gh = nn.Parameter(torch.empty(hidden_dim, hidden_dim)).to(device) 
+        self.W_ih = nn.Parameter(torch.empty(hidden_dim, hidden_dim)).to(device) 
+        self.W_fh = nn.Parameter(torch.empty(hidden_dim, hidden_dim)).to(device) 
+        self.W_oh = nn.Parameter(torch.empty(hidden_dim, hidden_dim)).to(device) 
 
         # biases
-        self.b_g = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True).to(device)
-        self.b_i = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True).to(device)
-        self.b_f = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True).to(device)
-        self.b_o = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True).to(device)
+        self.b_g = nn.Parameter(torch.zeros(hidden_dim, 1)).to(device)
+        self.b_i = nn.Parameter(torch.zeros(hidden_dim, 1)).to(device)
+        self.b_f = nn.Parameter(torch.zeros(hidden_dim, 1)).to(device)
+        self.b_o = nn.Parameter(torch.zeros(hidden_dim, 1)).to(device)
 
-        self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim), requires_grad=True).to(device)
-        self.b_p = nn.Parameter(torch.zeros(1, num_classes), requires_grad=True).to(device)
+        self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim)).to(device)
+        self.b_p = nn.Parameter(torch.zeros(1, num_classes)).to(device)
 
         # non-linearity
         self.tanh = nn.Tanh()
@@ -95,11 +95,11 @@ class LSTM(nn.Module):
                 nn.init.kaiming_normal_(param, nonlinearity="linear")
 
     def init_states(self): 
-        self.c = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
-        self.h = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
+        self.c = torch.zeros(self.batch_size, self.hidden_dim).to(self.device)
+        self.h = torch.zeros(self.batch_size, self.hidden_dim).to(self.device)
 
-        nn.init.kaiming_normal_(self.c, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
-        nn.init.kaiming_normal_(self.h, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
+        # nn.init.kaiming_normal_(self.c, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
+        # nn.init.kaiming_normal_(self.h, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
 
 
     def forward(self, x):
