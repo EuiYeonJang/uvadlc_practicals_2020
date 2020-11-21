@@ -35,28 +35,13 @@ class LSTMCell(nn.Module):
         self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim), requires_grad=True).to(device)
         self.b_p = nn.Parameter(torch.zeros(1, num_classes), requires_grad=True).to(device)
 
-        self.init_params()
-
         # non-linearity
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=-1)
 
-
-    def init_params(self):
-        nn.init.kaiming_normal_(self.W_gx, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_ix, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_fx, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_ox, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_gh, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_ih, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_fh, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_oh, nonlinearity="linear")
-        nn.init.kaiming_normal_(self.W_ph, nonlinearity="linear")
-
-
     def forward(self, x, c, h):
-        # Eq 4d
+        # Eq 4
         g = self.tanh(x@self.W_gx.T + h@self.W_gh.T + self.b_g)
         # Eq 5
         i = self.sigmoid(x@self.W_ix.T + h@self.W_ih.T + self.b_i)
@@ -74,6 +59,8 @@ class LSTMCell(nn.Module):
         p = h@self.W_ph.T + self.b_p
 
         # y = self.softmax(p)
+        # print(self.b_p.shape)
+        # print(p.shape)
 
         return p, c, h
 
@@ -91,35 +78,41 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.device = device
-        embedding_size = 10 #int(hidden_dim/2) 
-        # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
+        embedding_size = 10 #int(hidden_dim/2)
         self.embedding = nn.Embedding(input_dim, embedding_size).to(device)
 
         self.cell = LSTMCell(embedding_size, hidden_dim, num_classes, device).to(device)
+
+        self.init_weights()
         ########################
         # END OF YOUR CODE    #
         #######################
 
-    def init_params(self):
+    def init_weights(self):
+        for name, param in self.named_parameters():
+            if name.startswith("cell.W_"):
+                nn.init.kaiming_normal_(param, nonlinearity="linear")
+
+    def init_states(self): 
+        self.c = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
+        self.h = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
+
         nn.init.kaiming_normal_(self.c, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
         nn.init.kaiming_normal_(self.h, nonlinearity="linear") #, mode='fan_in', nonlinearity='relu')
-        
+
 
     def forward(self, x):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        x = x.squeeze()
-        self.c = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
-        self.h = torch.empty(self.batch_size, self.hidden_dim).to(self.device)
-        self.init_params()
+        # x = x.squeeze()
+        self.init_states()
 
         embed_x = self.embedding(x.long())
 
         for t in range(self.seq_length):
-            # y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
-            y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
-
+            y, self.c, self.h = self.cell(embed_x[:,:,t], self.c, self.h)
+            # y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
 
         return y
         ########################
