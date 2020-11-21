@@ -44,8 +44,8 @@ import numpy as np
 
 
 def train(config):
-    np.random.seed(0)
-    torch.manual_seed(0)
+    np.random.seed(FLAGS.seed)
+    torch.manual_seed(FLAGS.seed)
 
 
     # Initialize the device which to run the model on
@@ -121,6 +121,11 @@ def train(config):
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
+    delta_threshold = 0.01
+    no_change = 0
+    prev_acc = 0
+    acc_list = list()
+
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
         # Only for time measurement of step through network
@@ -152,8 +157,19 @@ def train(config):
         predictions = torch.argmax(log_probs, dim=1)
         correct = (predictions == batch_targets).sum().item()
         accuracy = correct / log_probs.size(0)
-
+    
+        acc_list.append(accuracy)
         # print(predictions[0, ...], batch_targets[0, ...])
+
+        if abs(prev_acc - accuracy) < delta_threshold:
+            no_change += 1
+        else:
+            no_change = 0
+
+        if no_change > 5:
+            with open(f"./summaries/seed_{FLAGS.seed}_seq_{FLAGS.input_length}.txt", "wb") as f:
+                f.write(acc_list)
+            break
 
         # Just for time measurement
         t2 = time.time()
@@ -220,6 +236,8 @@ if __name__ == "__main__":
                         help='Log device placement for debugging')
     parser.add_argument('--summary_path', type=str, default="./summaries/",
                         help='Output path for summaries')
+    parser.add_argument('--seed', type=str, default=0,
+                        help='Specify seed')
 
     config = parser.parse_args()
 

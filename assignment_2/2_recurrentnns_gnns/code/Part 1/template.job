@@ -2,12 +2,13 @@
 
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=ExampleJob
+#SBATCH --job-name=Q1.3
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
 #SBATCH --time=04:00:00
 #SBATCH --mem=32000M
-#SBATCH --output=1_3_output_%A.out
+#SBATCH --array=1-16%8
+#SBATCH --output=slurm_array_testing_%A_%a.out
 
 module purge
 module load 2019
@@ -17,6 +18,14 @@ module load cuDNN/7.6.5.32-CUDA-10.1.243
 module load NCCL/2.5.6-CUDA-10.1.243
 module load Anaconda3/2018.12
 
+# Activate your environment
 source activate dl2020
 
-srun python -u train.py --input_length 6
+
+$HPARAMS_FILE=./hyperparam.txt
+
+# Good practice: define your directory where to save the models, and copy the job file to it
+# Run your code
+srun python -u train.py \
+               --checkpoint_path $task_${SLURM_ARRAY_TASK_ID} \
+               $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
