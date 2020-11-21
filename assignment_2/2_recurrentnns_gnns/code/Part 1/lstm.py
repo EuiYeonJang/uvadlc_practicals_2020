@@ -92,9 +92,9 @@ class LSTM(nn.Module):
         self.device = device
         embedding_size = int(hidden_dim/2) 
         # self.embedding = nn.Embedding(input_dim, embedding_size, padding_idx=1)
-        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1)
+        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1).to(device)
 
-        self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device)
+        self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device).to(device)
         
         self.c = torch.empty(hidden_dim, hidden_dim).to(device)
         self.h = torch.empty(hidden_dim, hidden_dim).to(device)
