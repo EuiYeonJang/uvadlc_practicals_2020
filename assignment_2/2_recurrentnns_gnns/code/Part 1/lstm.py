@@ -56,8 +56,6 @@ class LSTMCell(nn.Module):
 
 
     def forward(self, x, c, h):
-        print(x.shape)
-        print(self.W_gx.T.shape)
         # Eq 4d
         g = self.tanh(x@self.W_gx.T + h@self.W_gh.T + self.b_g)
         # Eq 5
