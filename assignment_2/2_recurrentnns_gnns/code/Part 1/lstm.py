@@ -16,10 +16,10 @@ class LSTMCell(nn.Module):
         super().__init__()
 
         # Weights
-        self.W_gx = nn.Parameter(torch.empty(input_dim, hidden_dim), requires_grad=True) 
-        self.W_ix = nn.Parameter(torch.empty(input_dim, hidden_dim), requires_grad=True) 
-        self.W_fx = nn.Parameter(torch.empty(input_dim, hidden_dim), requires_grad=True) 
-        self.W_ox = nn.Parameter(torch.empty(input_dim, hidden_dim), requires_grad=True) 
+        self.W_gx = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
+        self.W_ix = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
+        self.W_fx = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
+        self.W_ox = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
 
         self.W_gh = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
         self.W_ih = nn.Parameter(torch.empty(hidden_dim, hidden_dim), requires_grad=True) 
@@ -39,8 +39,8 @@ class LSTMCell(nn.Module):
         self.b_f = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True)
         self.b_o = nn.Parameter(torch.zeros(hidden_dim, 1), requires_grad=True)
 
-        self.W_ph = nn.Parameter(torch.empty(hidden_dim, num_classes), requires_grad=True)
-        self.b_p = nn.Parameter(torch.zeros(num_classes, 1), requires_grad=True)
+        self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim), requires_grad=True)
+        self.b_p = nn.Parameter(torch.zeros(1, num_classes), requires_grad=True)
 
         self.init_params()
 
@@ -64,13 +64,13 @@ class LSTMCell(nn.Module):
 
     def forward(self, x, c, h):
         # Eq 4d
-        g = self.tanh(x@self.W_gx.T + h@self.W_gh.T + self.b_g)
+        g = self.tanh(x.T @ self.W_gx + h@self.W_gh.T + self.b_g)
         # Eq 5
-        i = self.sigmoid(x@self.ix.T + h@self.W_ih.T + self.b_i)
+        i = self.sigmoid(x.T @ self.W_ix + h@self.W_ih.T + self.b_i)
         # Eq 6
-        f = self.sigmoid(x@self.W_fx.T + h@self.W_fh.T + self.b_f)
+        f = self.sigmoid(x.T @ self.W_fx + h@self.W_fh.T + self.b_f)
         # Eq 7
-        o = self.sigmoid(x@self.W_ox.T + h@self.W_oh.T + self.b_o)
+        o = self.sigmoid(x.T @ self.W_ox + h@self.W_oh.T + self.b_o)
 
         # Eq 8
         c = g * i + c * f
@@ -78,7 +78,7 @@ class LSTMCell(nn.Module):
         h = self.tanh(c) * o
 
         # Eq 10
-        p = h@self.W_oh.T
+        p = h@self.W_ph.T
         p += self.b_p
         y = self.softmax(p)
         return y, c, h
@@ -94,6 +94,7 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         self.seq_length = seq_length
+        self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=1)
 
         self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device)
         
@@ -114,9 +115,10 @@ class LSTM(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        
+        x = x.squeeze()
+        embed_x = self.embedding(x.long())
         for t in range(self.seq_length):
-            y, self.c, self.h = self.cell(x[:,:,t], self.c, self.h)
+            y, self.c, self.h = self.cell(embed_x[:,t], self.c, self.h)
 
         return y
         ########################
