@@ -64,13 +64,13 @@ class LSTMCell(nn.Module):
 
     def forward(self, x, c, h):
         # Eq 4d
-        g = self.tanh(self.W_gx(x) + self.W_gh(h) + self.b_g)
+        g = self.tanh(x@self.W_gx.T + h@self.W_gh.T + self.b_g)
         # Eq 5
-        i = self.sigmoid(self.ix(x) + self.W_ih(h) + self.b_i)
+        i = self.sigmoid(x@self.ix.T + h@self.W_ih.T + self.b_i)
         # Eq 6
-        f = self.sigmoid(self.W_fx(x) + self.W_fh(h) + self.b_f)
+        f = self.sigmoid(x@self.W_fx.T + h@self.W_fh.T + self.b_f)
         # Eq 7
-        o = self.sigmoid(self.W_ox(x) + self.W_oh(h) + self.b_o)
+        o = self.sigmoid(x@self.W_ox.T + h@self.W_oh.T + self.b_o)
 
         # Eq 8
         c = g * i + c * f
@@ -78,7 +78,7 @@ class LSTMCell(nn.Module):
         h = self.tanh(c) * o
 
         # Eq 10
-        p = self.W_oh(h)
+        p = h@self.W_oh.T
         p += self.b_p
         y = self.softmax(p)
         return y, c, h
