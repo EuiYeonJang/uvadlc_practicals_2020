@@ -166,7 +166,7 @@ def train(config):
         else:
             no_change = 0
 
-        if no_change > 5:
+        if no_change > 15:
             with open(f"./{config.summary_path}/seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
                 pkl.dump(acc_list, f)
             break

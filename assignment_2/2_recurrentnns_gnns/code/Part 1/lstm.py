@@ -105,8 +105,6 @@ class LSTM(nn.Module):
         # non-linearity
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax(dim=-1)
-
 
         self.init_weights()
         ########################
@@ -153,6 +151,7 @@ class LSTM(nn.Module):
             # Eq 10
             y = self.h@self.W_ph.T + self.b_p
 
+        # no need for softmax since using cross entropy
         return y
         ########################
         # END OF YOUR CODE    #
