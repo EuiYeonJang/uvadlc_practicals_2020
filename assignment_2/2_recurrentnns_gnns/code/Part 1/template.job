@@ -23,9 +23,9 @@ source activate dl2020
 
 
 $HPARAMS_FILE=./hyperparam.txt
+CHECKPOINTDIR=./summaries/array_job_${SLURM_ARRAY_JOB_ID}
 
 # Good practice: define your directory where to save the models, and copy the job file to it
 # Run your code
 srun python -u train.py \
-               --checkpoint_path $task_${SLURM_ARRAY_TASK_ID} \
                $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
