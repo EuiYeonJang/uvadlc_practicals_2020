@@ -1,0 +1,25 @@
+cuda:0
+Load bss dataset ...
+Initializing LSTM model ...
+W_gx
+W_ix
+W_fx
+W_ox
+W_gh
+W_ih
+W_fh
+W_oh
+W_ph
+Traceback (most recent call last):
+  File "train.py", line 227, in <module>
+    train(config)
+  File "train.py", line 137, in train
+    log_probs = model(batch_inputs)
+  File "/home/lgpu0417/.conda/envs/dl2020/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/lgpu0417/uvadlc_practicals_2020/assignment_2/2_recurrentnns_gnns/code/Part 1/lstm.py", line 131, in forward
+    self.init_states()
+  File "/home/lgpu0417/uvadlc_practicals_2020/assignment_2/2_recurrentnns_gnns/code/Part 1/lstm.py", line 123, in init_states
+    self.c = torch.zeros(self.batch_size, self.hidden_dim).to(device)
+NameError: name 'device' is not defined
+srun: error: r30n6: task 0: Exited with exit code 1
