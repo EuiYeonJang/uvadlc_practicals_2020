@@ -95,8 +95,8 @@ class LSTM(nn.Module):
 
         self.cell = LSTMCell(input_dim, hidden_dim, num_classes, device)
         
-        self.c = torch.empty(hidden_dim, hidden_dim)
-        self.h = torch.empty(hidden_dim, hidden_dim)
+        self.c = torch.empty(hidden_dim, hidden_dim).to(device)
+        self.h = torch.empty(hidden_dim, hidden_dim).to(device)
 
         self.init_params()
         ########################
@@ -113,8 +113,8 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         x = x.squeeze()
-        self.c = torch.empty(self.hidden_dim, self.hidden_dim)
-        self.h = torch.empty(self.hidden_dim, self.hidden_dim)
+        self.c = torch.empty(self.hidden_dim, self.hidden_dim).to(device)
+        self.h = torch.empty(self.hidden_dim, self.hidden_dim).to(device)
         self.init_params()
 
         embed_x = self.embedding(x.long())
