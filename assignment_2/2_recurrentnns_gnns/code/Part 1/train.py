@@ -36,7 +36,7 @@ from gru import GRU
 from peep_lstm import peepLSTM
 
 import numpy as np
-
+import pickle as pkl
 # You may want to look into tensorboardX for logging
 # from tensorboardX import SummaryWriter
 
@@ -44,17 +44,17 @@ import numpy as np
 
 
 def train(config):
-    np.random.seed(FLAGS.seed)
-    torch.manual_seed(FLAGS.seed)
+    np.random.seed(config.seed)
+    torch.manual_seed(config.seed)
 
 
     # Initialize the device which to run the model on
     device = torch.device(config.device)
-    print(device)
+    # print(device)
 
     # Load dataset
     if config.dataset == 'randomcomb':
-        print('Load random combinations dataset ...')
+        # print('Load random combinations dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = config.input_length
         dataset = datasets.RandomCombinationsDataset(config.input_length)
@@ -62,7 +62,7 @@ def train(config):
                                  drop_last=True)
 
     elif config.dataset == 'bss':
-        print('Load bss dataset ...')
+        # print('Load bss dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = 2
         config.input_dim = 3
@@ -73,7 +73,7 @@ def train(config):
         config.input_length = 4 * config.input_length
 
     elif config.dataset == 'bipalindrome':
-        print('Load binary palindrome dataset ...')
+        # print('Load binary palindrome dataset ...')
         # Initialize the dataset and data loader
         config.num_classes = config.input_length
         dataset = datasets.BinaryPalindromeDataset(config.input_length)
@@ -86,7 +86,7 @@ def train(config):
 
     # Setup the model that we are going to use
     if config.model_type == 'LSTM':
-        print("Initializing LSTM model ...")
+        # print("Initializing LSTM model ...")
         model = LSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -94,7 +94,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'biLSTM':
-        print("Initializing bidirectional LSTM model...")
+        # print("Initializing bidirectional LSTM model...")
         model = biLSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -102,7 +102,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'GRU':
-        print("Initializing GRU model ...")
+        # print("Initializing GRU model ...")
         model = GRU(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -110,7 +110,7 @@ def train(config):
         ).to(device)
 
     elif config.model_type == 'peepLSTM':
-        print("Initializing peephole LSTM model ...")
+        # print("Initializing peephole LSTM model ...")
         model = peepLSTM(
             config.input_length, config.input_dim,
             config.num_hidden, config.num_classes,
@@ -167,23 +167,23 @@ def train(config):
             no_change = 0
 
         if no_change > 5:
-            with open(f"./summaries/seed_{FLAGS.seed}_seq_{FLAGS.input_length}.txt", "wb") as f:
-                f.write(acc_list)
+            with open(f"./summaries/seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
+                pkl.dump(acc_list, f)
             break
 
         # Just for time measurement
         t2 = time.time()
         examples_per_second = config.batch_size/float(t2-t1)
 
-        if step % 60 == 0:
+        # if step % 60 == 0:
 
-            print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, \
-                   Examples/Sec = {:.2f}, "
-                  "Accuracy = {:.2f}, Loss = {:.3f}".format(
-                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                    config.train_steps, config.batch_size, examples_per_second,
-                    accuracy, loss
-                    ))
+            # print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, \
+                #    Examples/Sec = {:.2f}, "
+                #   "Accuracy = {:.2f}, Loss = {:.3f}".format(
+                #     datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                #     config.train_steps, config.batch_size, examples_per_second,
+                #     accuracy, loss
+                #     ))
 
         # Check if training is finished
         if step == config.train_steps:
@@ -191,7 +191,7 @@ def train(config):
             # https://github.com/pytorch/pytorch/pull/9655
             break
 
-    print('Done training.')
+    # print('Done training.')
     ###########################################################################
     ###########################################################################
 
