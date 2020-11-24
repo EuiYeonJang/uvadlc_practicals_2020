@@ -40,27 +40,44 @@ def train(config):
     device = torch.device(config.device)
 
     # Initialize the dataset and data loader (note the +1)
-    dataset = TextDataset(...)  # fixme
+    dataset = TextDataset(config.txt_file, config.seq_length)  # FIXME
     data_loader = DataLoader(dataset, config.batch_size)
 
     # Initialize the model that we are going to use
-    model = TextGenerationModel(...)  # FIXME
+    model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, device)  # FIXME
 
     # Setup the loss and optimizer
-    criterion = None  # FIXME
-    optimizer = None  # FIXME
+    criterion = torch.nn.CrossEntropyLoss()  # FIXME
+    optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)  # FIXME
+
+    acc_list = list()
 
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
-
         # Only for time measurement of step through network
         t1 = time.time()
-
         #######################################################
         # Add more code here ...
         #######################################################
+        batch_inputs = torch.stack(batch_inputs).to(device)
+        batch_targets = torch.stack(batch_targets).to(device)
 
-        loss = np.inf   # fixme
-        accuracy = 0.0  # fixme
+        model.zero_grad()
+
+        prediction = model(batch_inputs)
+        loss = criterion(prediction.transpose(1, 2), batch_targets)   # FIXME
+        loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(model.parameters(),
+                                       max_norm=config.seq_length)
+
+        optimizer.step()
+
+        predictions = torch.argmax(prediction, dim=2)
+        correct = (predictions == batch_targets).sum().item()
+
+        accuracy = correct / prediction.size(0) # FIXME
+    
+        acc_list.append(accuracy)
 
         # Just for time measurement
         t2 = time.time()
@@ -78,6 +95,9 @@ def train(config):
 
         if (step + 1) % config.sample_every == 0:
             # Generate some sentences by sampling from the model
+
+            # print(predictions.shape)
+            # break
             pass
 
         if step == config.train_steps:
@@ -98,7 +118,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model params
-    parser.add_argument('--txt_file', type=str, required=True,
+    parser.add_argument('--txt_file', type=str, #required=True,
+                        default="./assets/book_EN_democracy_in_the_US.txt",
                         help="Path to a .txt file to train on")
     parser.add_argument('--seq_length', type=int, default=30,
                         help='Length of an input sequence')
