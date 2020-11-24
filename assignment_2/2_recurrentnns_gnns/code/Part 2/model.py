@@ -29,10 +29,11 @@ class TextGenerationModel(nn.Module):
 
         self.embedding_size = 10
         self.batch_size = batch_size
+        self.device = device
         self.lstm_num_hidden = lstm_num_hidden
         self.embed = nn.Embedding(vocabulary_size, self.embedding_size)
         
-        self.lstm = nn.LSTM(self.embedding_size, lstm_num_hidden, lstm_num_layers)
+        self.lstm = nn.LSTM(self.embedding_size, lstm_num_hidden, lstm_num_layers).to(device)
 
         self.output_layer = nn.Linear(lstm_num_hidden, vocabulary_size)
 
