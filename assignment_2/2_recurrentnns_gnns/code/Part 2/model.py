@@ -28,20 +28,15 @@ class TextGenerationModel(nn.Module):
         super(TextGenerationModel, self).__init__()
 
         self.embedding_size = 10
-        self.batch_size = batch_size
-        self.device = device
-        self.lstm_num_hidden = lstm_num_hidden
         self.embed = nn.Embedding(vocabulary_size, self.embedding_size)
         
-        self.lstm = nn.LSTM(self.embedding_size, lstm_num_hidden, lstm_num_layers).to(device)
+        self.lstm = nn.LSTM(self.embedding_size, lstm_num_hidden, lstm_num_layers)
 
         self.output_layer = nn.Linear(lstm_num_hidden, vocabulary_size)
 
     def forward(self, x):
         embed_x = self.embed(x)
-        
-        p, _= self.lstm(embed_x.float())
-    
+        p, _ = self.lstm(embed_x)
         logits = self.output_layer(p)
 
         return logits
