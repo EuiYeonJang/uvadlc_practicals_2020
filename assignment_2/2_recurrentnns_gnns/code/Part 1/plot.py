@@ -3,25 +3,27 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-def plot_figure(input_length):
+def plot_figure(model_type, input_length):
+    input_length *= 4
     DATA_DIR = "./summaries/"
     seed = [0, 4, 17]
 
-    min_step = 3000
+    data_len = list()
     data = list()
     for s in seed:
-        with open(f"{DATA_DIR}seed_{s}_seq_{input_length}.pkl", "rb") as f:
+        with open(f"{DATA_DIR}{model_type}_seed_{s}_seq_{input_length}.pkl", "rb") as f:
             acc = pkl.load(f)
             
-            if len(acc) < min_step: 
-                min_step = len(acc)
-                data.append(acc)
-            else:
-                data.append(acc[:min_step])
+            data.append(acc)
+            data_len.append(len(acc))
 
-    
-    m = np.mean(data, axis=1)
-    s = np.std(data, axis=1)
+    min_step = min(data_len)
+
+    data = [i[:min_step] for i in data]
+    for i in data:
+        print(len(i))
+    m = np.mean(data, axis=0)
+    s = np.std(data, axis=0)
 
 
     x = np.linspace(0, min_step, min_step)
@@ -32,4 +34,5 @@ def plot_figure(input_length):
 
 
 if __name__ == "__main__":
-    pass
+    for i in [4, 5, 6]:
+        plot_figure("GRU", i)
