@@ -27,12 +27,15 @@ def plot_figure(model_type, input_length):
 
 
     x = np.linspace(0, min_step, min_step)
-    plt.plot(x, m, 'k-')
-    plt.fill_between(x, m-s, m+s)
+    plt.plot(x, m, color="tab:blue")
+    plt.fill_between(x, m-s, m+s, color="tab:green")
+    plt.title(f"{model_type} with Sequence Length {input_length}")
+    plt.ylabel("Mean Accuracy")
+    plt.xlabel("Training Steps")
     plt.show()
     
 
 
 if __name__ == "__main__":
     for i in [4, 5, 6]:
-        plot_figure("GRU", i)
+        plot_figure("LSTM", i)
