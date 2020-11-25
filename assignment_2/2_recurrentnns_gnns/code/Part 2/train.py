@@ -75,7 +75,7 @@ def train(config):
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(),
-                                        max_norm=config.seq_length)
+                                        max_norm=config.max_norm)
 
             optimizer.step()
             
