@@ -193,7 +193,10 @@ def train(config):
         if step == config.train_steps:
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
-            acc_data = {"conv_step": conv_step if conv_step is not None else step, "acc_list": acc_list}
+            acc_data = {
+                "conv_step": conv_step if conv_step is not None else step, 
+                "acc_list": acc_list
+                }
             filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl"
             with open(filename, "wb") as f:
                 pkl.dump(acc_data, f)
