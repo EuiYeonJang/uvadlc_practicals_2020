@@ -162,10 +162,8 @@ def train(config):
     
         acc_list.append(accuracy)
         # print(predictions[0, ...], batch_targets[0, ...])
-
-        if accuracy == 1.0: convergence = True
         
-        if convergence and abs(prev_acc - accuracy) < delta_threshold:
+        if accuracy == 1.0 or abs(prev_acc - accuracy) < delta_threshold:
             no_change += 1
         else:
             no_change = 0
