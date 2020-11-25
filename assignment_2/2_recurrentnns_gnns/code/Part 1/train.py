@@ -167,8 +167,9 @@ def train(config):
         if convergence and abs(prev_acc - accuracy) < delta_threshold:
             no_change += 1
 
-        if no_change > 15:
-            with open(f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
+        if no_change > 30:
+            filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl"
+            with open(filename, "wb") as f:
                 pkl.dump(acc_list, f)
             break
 
