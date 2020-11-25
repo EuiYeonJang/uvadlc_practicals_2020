@@ -126,6 +126,7 @@ def train(config):
     prev_acc = 0
     acc_list = list()
     convergence = False
+    conv_acc = None
 
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
@@ -166,12 +167,11 @@ def train(config):
         
         if convergence and abs(prev_acc - accuracy) < delta_threshold:
             no_change += 1
+        else:
+            no_change = 0
 
         if no_change > 30:
-            filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl"
-            with open(filename, "wb") as f:
-                pkl.dump(acc_list, f)
-            break
+            conv_step = step
 
         prev_acc = accuracy
 
@@ -193,8 +193,10 @@ def train(config):
         if step == config.train_steps:
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
-            with open(f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl", "wb") as f:
-                pkl.dump(acc_list, f)
+            acc_data = {"conv_step": conv_step if conv_step is not None else step, "acc_list": acc_list}
+            filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl"
+            with open(filename, "wb") as f:
+                pkl.dump(acc_data, f)
             break
 
     print('Done training.')
