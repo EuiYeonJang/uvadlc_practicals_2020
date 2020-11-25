@@ -81,7 +81,7 @@ def train(config):
             
             preds = torch.argmax(preds, dim=1)
             correct = (preds == batch_targets).sum().item()
-            accuracy = correct / preds.size(0) # FIXME
+            accuracy = correct / (config.batch_size*config.seq_length) # FIXME
         
             acc_list.append(accuracy)
 
@@ -98,7 +98,6 @@ def train(config):
                         config.train_steps, config.batch_size, examples_per_second,
                         accuracy, loss
                         ))
-
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
                 pass
