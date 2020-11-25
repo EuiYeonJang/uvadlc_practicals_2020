@@ -34,9 +34,11 @@ class TextGenerationModel(nn.Module):
 
         self.output_layer = nn.Linear(lstm_num_hidden, vocabulary_size)
 
-    def forward(self, x):
+    def forward(self, x, prev_state=None):
         embed_x = self.embed(x)
-        p, _ = self.lstm(embed_x)
+        
+        p, prev_state = self.lstm(embed_x) if prev_state == None else self.lstm(embed_x, prev_state)
+
         logits = self.output_layer(p)
 
-        return logits
+        return logits, prev_state

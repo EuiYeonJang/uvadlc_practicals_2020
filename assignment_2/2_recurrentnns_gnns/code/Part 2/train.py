@@ -48,13 +48,14 @@ def train(config):
 
     # Setup the loss and optimizer
     criterion = torch.nn.CrossEntropyLoss()  # FIXME
-    t_criterion = torch.nn.CrossEntropyLoss(reduction="none")  # FIXME
 
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)  # FIXME
 
     acc_list = list()
+    
+    model.train()
 
-    for epoch in range(3):
+    for epoch in range(1):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
             # Only for time measurement of step through network
             t1 = time.time()
@@ -66,7 +67,7 @@ def train(config):
 
             model.zero_grad()
 
-            preds = model(batch_inputs)
+            preds, _ = model(batch_inputs)
             preds = preds.transpose(0, 1)
             preds = preds.transpose(1, 2)   
             batch_targets = batch_targets.T
@@ -101,7 +102,24 @@ def train(config):
 
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
-                pass
+                rand_idx = np.random.randint(dataset.vocab_size)
+                gen_txt = [rand_idx]
+
+                model.eval()
+
+                for t in range(config.seq_length):
+                    if t == 0:
+                        idx = torch.tensor([[rand_idx]]).to(device)
+                        output, (h, c) = model(idx)
+                    else:
+                        output, (h, c) = model(torch.tensor([[idx]]), (h, c))
+                    
+                    idx = torch.argmax(output).item()
+                    gen_txt.append(idx)
+
+                print(dataset.convert_to_string(gen_txt))
+
+                model.train()
 
             if step == config.train_steps:
                 # If you receive a PyTorch data-loader error,
@@ -160,8 +178,6 @@ if __name__ == "__main__":
                         help="Device to run the model on.")
 
     # If needed/wanted, feel free to add more arguments
-
     config = parser.parse_args()
-
     # Train the model
     train(config)
