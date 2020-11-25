@@ -27,5 +27,5 @@ HPARAMS_FILE=./hyperparam.txt
 # Good practice: define your directory where to save the models, and copy the job file to it
 # Run your code
 srun python -u train.py \
-                --model_type GRU \
+                --model_type LSTM \
                $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
