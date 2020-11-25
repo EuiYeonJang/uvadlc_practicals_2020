@@ -59,6 +59,8 @@ def train(config):
     
     model.train()
 
+    config.sample_every = int(len(data_loader)/3)
+
     for epoch in range(1):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
             # Only for time measurement of step through network
@@ -139,9 +141,9 @@ def train(config):
     model.eval()
 
     rand_idx = np.random.randint(dataset.vocab_size)
-    gen_txt = [rand_idx]
-    softmax = torch.nn.Softmax()
+    softmax = torch.nn.Softmax(dim=-1)
     for tao in [0.5, 1, 2]:
+        gen_txt = [rand_idx]
         print(f"Temperature {tao}")
         for t in range(config.seq_length):
             if t == 0:
@@ -162,7 +164,7 @@ def train(config):
     print("Saving data...")
 
     train_data = dict(acc=acc_list, loss=loss_list, greedy=greedy_sent, temp=temp_sent)
-    with open(f".{config.summary_path}data.pkl", "wb") as f:
+    with open(f"{config.summary_path}data.pkl", "wb") as f:
         pkl.dump(train_data, f)
 
     print("Rest easy")
@@ -209,7 +211,7 @@ if __name__ == "__main__":
                         help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5,
                         help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=3e5,
+    parser.add_argument('--sample_every', type=int, default=100,
                         help='How often to sample from the model')
     parser.add_argument('--device', type=str, default=("cpu" if not torch.cuda.is_available() else "cuda"),
                         help="Device to run the model on.")
