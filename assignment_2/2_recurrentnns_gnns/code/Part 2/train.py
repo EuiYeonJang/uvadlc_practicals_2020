@@ -98,6 +98,7 @@ def train(config):
                         config.train_steps, config.batch_size, examples_per_second,
                         accuracy, loss
                         ))
+
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
                 pass
