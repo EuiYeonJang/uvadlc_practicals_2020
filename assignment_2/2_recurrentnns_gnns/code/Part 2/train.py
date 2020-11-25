@@ -21,6 +21,7 @@ import os
 import time
 from datetime import datetime
 import argparse
+import pickle as pkl
 
 import numpy as np
 
@@ -52,6 +53,9 @@ def train(config):
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)  # FIXME
 
     acc_list = list()
+    loss_list = list()
+    greedy_sent = list()
+    temp_sent = list()    
     
     model.train()
 
@@ -63,16 +67,16 @@ def train(config):
             # Add more code here ...
             #######################################################
             batch_inputs = torch.stack(batch_inputs).to(device)
-            batch_targets = torch.stack(batch_targets).to(device)
+            batch_targets = torch.stack(batch_targets).T.to(device)
 
             model.zero_grad()
 
             preds, _ = model(batch_inputs)
             preds = preds.transpose(0, 1)
-            preds = preds.transpose(1, 2)   
-            batch_targets = batch_targets.T
+            preds = preds.transpose(1, 2)
             
             loss = criterion(preds, batch_targets) # FIXME
+            loss_list.append(loss)
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(),
@@ -112,12 +116,15 @@ def train(config):
                         idx = torch.tensor([[rand_idx]]).to(device)
                         output, (h, c) = model(idx)
                     else:
-                        output, (h, c) = model(torch.tensor([[idx]]), (h, c))
+                        idx = torch.tensor([[idx]]).to(device)
+                        output, (h, c) = model(idx, (h, c))
                     
                     idx = torch.argmax(output).item()
                     gen_txt.append(idx)
 
-                print(dataset.convert_to_string(gen_txt))
+                gen_sent = dataset.convert_to_string(gen_txt)
+                print("Greedy: ", gen_sent)
+                greedy_sent.append((step+1, gen_sent))
 
                 model.train()
 
@@ -128,7 +135,37 @@ def train(config):
                 break
     print('Done training.')
 
+    print("Temperature sampling")
+    model.eval()
 
+    rand_idx = np.random.randint(dataset.vocab_size)
+    gen_txt = [rand_idx]
+    softmax = torch.nn.Softmax()
+    for tao in [0.5, 1, 2]:
+        print(f"Temperature {tao}")
+        for t in range(config.seq_length):
+            if t == 0:
+                idx = torch.tensor([[rand_idx]]).to(device)
+                output, (h, c) = model(idx)
+            else:
+                idx = torch.tensor([[idx]]).to(device)
+                output, (h, c) = model(idx, (h, c))
+            
+            idx = torch.argmax(softmax(tao*output)).item()
+            gen_txt.append(idx)
+
+        gen_sent = dataset.convert_to_string(gen_txt)
+        print("Temp: ", gen_sent)
+
+        temp_sent.append((tao, gen_sent))
+
+    print("Saving data...")
+
+    train_data = dict(acc=acc_list, loss=loss_list, greedy=greedy_sent, temp=temp_sent)
+    with open(f".{config.summary_path}data.pkl", "wb") as f:
+        pkl.dump(train_data, f)
+
+    print("Rest easy")
 ###############################################################################
 ###############################################################################
 
@@ -172,12 +209,14 @@ if __name__ == "__main__":
                         help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=5,
                         help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=100,
+    parser.add_argument('--sample_every', type=int, default=3e5,
                         help='How often to sample from the model')
     parser.add_argument('--device', type=str, default=("cpu" if not torch.cuda.is_available() else "cuda"),
                         help="Device to run the model on.")
 
     # If needed/wanted, feel free to add more arguments
     config = parser.parse_args()
+
+    print(config)
     # Train the model
     train(config)
