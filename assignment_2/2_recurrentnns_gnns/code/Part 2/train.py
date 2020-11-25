@@ -98,7 +98,6 @@ def train(config):
                         config.train_steps, config.batch_size, examples_per_second,
                         accuracy, loss
                         ))
-                break
 
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
@@ -109,7 +108,6 @@ def train(config):
                 # check this bug report:
                 # https://github.com/pytorch/pytorch/pull/9655
                 break
-        break
     print('Done training.')
 
 
