@@ -60,8 +60,9 @@ def train(config):
     model.train()
 
     config.sample_every = int(len(data_loader)/3)
+    config.train_steps = len(data_loader)
 
-    for epoch in range(1):
+    for epoch in range(3):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
             # Only for time measurement of step through network
             t1 = time.time()
@@ -98,11 +99,11 @@ def train(config):
             
             if (step + 1) % config.print_every == 0:
 
-                print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, \
+                print("[{}] Train Step {:04d}/{:04d}, Epoch {} Batch Size = {}, \
                         Examples/Sec = {:.2f}, "
                     "Accuracy = {:.2f}, Loss = {:.3f}".format(
                         datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                        config.train_steps, config.batch_size, examples_per_second,
+                        config.train_steps, epoch, config.batch_size, examples_per_second,
                         accuracy, loss
                         ))
 
