@@ -138,8 +138,6 @@ def train(config):
                 # check this bug report:
                 # https://github.com/pytorch/pytorch/pull/9655
                 break
-            break
-        break
     
     print('Done training.')
 
@@ -159,7 +157,7 @@ def train(config):
             else:
                 output, (h, c) = model(idx, (h, c))
             
-            distr= softmax(tao*output).squeeze().detach().numpy()
+            distr= softmax(tao*output).squeeze().cpu().detach().numpy()
             rand_idx = np.random.choice(classes, p=distr)
             gen_txt.append(rand_idx)
 
