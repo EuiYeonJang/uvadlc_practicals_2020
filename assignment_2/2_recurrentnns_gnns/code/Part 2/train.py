@@ -148,21 +148,20 @@ def train(config):
 
     rand_idx = np.random.randint(dataset.vocab_size)
     softmax = torch.nn.Softmax(dim=-1)
-    classes = np.range(dataset.vocab_size)
+    classes = np.arange(dataset.vocab_size)
     for tao in [0.5, 1, 2]:
         gen_txt = [rand_idx]
         print(f"Temperature {tao}")
         for t in range(config.seq_length):
+            idx = torch.tensor([[rand_idx]]).long().to(device)
             if t == 0:
-                idx = torch.tensor([[rand_idx]]).to(device)
                 output, (h, c) = model(idx)
             else:
-                idx = torch.tensor([[idx]]).to(device)
                 output, (h, c) = model(idx, (h, c))
             
-            distr= softmax(tao*output).numpy()
-            idx = np.choices(classes, distr)
-            gen_txt.append(idx)
+            distr= softmax(tao*output).squeeze().detach().numpy()
+            rand_idx = np.random.choice(classes, p=distr)
+            gen_txt.append(rand_idx)
 
         gen_sent = dataset.convert_to_string(gen_txt)
         print("Temp: ", gen_sent)
