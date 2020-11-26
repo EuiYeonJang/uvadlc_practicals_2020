@@ -96,7 +96,8 @@ def train(config):
             # Just for time measurement
             t2 = time.time()
             examples_per_second = config.batch_size/float(t2-t1)
-            
+
+
             if (step + 1) % config.print_every == 0:
 
                 print("[{}] Train Step {:04d}/{:04d}, Epoch {} Batch Size = {}, \
@@ -106,6 +107,7 @@ def train(config):
                         config.train_steps, epoch, config.batch_size, examples_per_second,
                         accuracy, loss
                         ))
+
 
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
@@ -136,6 +138,9 @@ def train(config):
                 # check this bug report:
                 # https://github.com/pytorch/pytorch/pull/9655
                 break
+            break
+        break
+    
     print('Done training.')
 
     print("Temperature sampling")
@@ -143,7 +148,7 @@ def train(config):
 
     rand_idx = np.random.randint(dataset.vocab_size)
     softmax = torch.nn.Softmax(dim=-1)
-    classes = range(len(dataset.vocab_size))
+    classes = np.range(dataset.vocab_size)
     for tao in [0.5, 1, 2]:
         gen_txt = [rand_idx]
         print(f"Temperature {tao}")
@@ -155,7 +160,7 @@ def train(config):
                 idx = torch.tensor([[idx]]).to(device)
                 output, (h, c) = model(idx, (h, c))
             
-            distr= softmax(tao*output).item()
+            distr= softmax(tao*output).numpy()
             idx = np.choices(classes, distr)
             gen_txt.append(idx)
 
