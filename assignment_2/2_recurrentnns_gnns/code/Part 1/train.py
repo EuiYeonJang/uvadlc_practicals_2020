@@ -166,7 +166,7 @@ def train(config):
         else:
             no_change = 0
 
-        if no_change > 120: # at least two evaluation steps
+        if no_change > 60: # at least one "evaluation" step
             break
 
         prev_acc = accuracy
