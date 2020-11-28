@@ -121,12 +121,10 @@ def train(config):
     loss_function = torch.nn.CrossEntropyLoss() # changed to CrossEntropyLoss
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
-    delta_threshold = 0.05
+    delta_threshold = 0.001
     no_change = 0
     prev_acc = 0
     acc_list = list()
-    convergence = False
-    conv_acc = None
 
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
