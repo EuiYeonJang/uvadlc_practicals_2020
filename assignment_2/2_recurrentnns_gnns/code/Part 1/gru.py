@@ -31,19 +31,24 @@ class GRU(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
 
-        embedding_size = 10
+        embedding_size = 10 # embedding size to match LSTM of 1.3
         self.embed = nn.Embedding(input_dim, embedding_size)
 
-        weight_size = embedding_size + hidden_dim
-        self.W_z = nn.Parameter(torch.empty(hidden_dim, weight_size))
-        self.W_r = nn.Parameter(torch.empty(hidden_dim, weight_size))
-        self.W = nn.Parameter(torch.empty(hidden_dim, weight_size))
+        # weights
+        concat_size = embedding_size + hidden_dim # for concatenation
+        self.W_z = nn.Parameter(torch.empty(hidden_dim, concat_size))
+        self.W_r = nn.Parameter(torch.empty(hidden_dim, concat_size))
+        self.W = nn.Parameter(torch.empty(hidden_dim, concat_size))
+
         self.W_ph = nn.Parameter(torch.empty(num_classes, hidden_dim))
 
+        # bias
         self.b_p = nn.Parameter(torch.zeros(num_classes))
+
+        # non-linearity
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
 
         self.init_weights()
         ########################
@@ -66,20 +71,23 @@ class GRU(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        self.init_states()
-        x = x.squeeze()
+        x = x.squeeze() # we don't need the featuer dim, it will always be 
+        self.init_states() # initialise states each time
+
         embed_x = self.embed(x.long())
+
         for t in range(self._seq_length):
             x_t = embed_x[:, t]
             
             # Eq 29
             h_prev_x_t = torch.cat((self.h, x_t), 1)
             z = self.sigmoid(h_prev_x_t@self.W_z.T)
+
             # Eq 30
             r = self.sigmoid(h_prev_x_t@self.W_r.T)
             
             # Eq 31
-            r_h_prev_x_t = torch.cat((self.h*r, x_t), 1)
+            r_h_prev_x_t = torch.cat((r*self.h, x_t), 1)
             h_tilde = self.tanh(r_h_prev_x_t@self.W.T)
             
             # Eq 32
@@ -88,9 +96,8 @@ class GRU(nn.Module):
             # Eq 33
             p = self.h@self.W_ph.T + self.b_p
 
-        # no need for softmax since using cross entropy
-        return p
-
+        
+        return p # no need for softmax since using cross entropy
         ########################
         # END OF YOUR CODE    #
         #######################

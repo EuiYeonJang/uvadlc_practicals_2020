@@ -118,7 +118,7 @@ def train(config):
         ).to(device)
 
     # Setup the loss and optimizer
-    loss_function = torch.nn.CrossEntropyLoss()
+    loss_function = torch.nn.CrossEntropyLoss() # changed to CrossEntropyLoss
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
     delta_threshold = 0.05
@@ -163,13 +163,13 @@ def train(config):
         acc_list.append(accuracy)
         # print(predictions[0, ...], batch_targets[0, ...])
         
-        if accuracy == 1.0 or abs(prev_acc - accuracy) < delta_threshold:
+        if abs(prev_acc - accuracy) < delta_threshold:
             no_change += 1
         else:
             no_change = 0
 
-        if no_change > 30:
-            conv_step = step
+        if no_change > 120: # at least two evaluation steps
+            break
 
         prev_acc = accuracy
 
@@ -191,14 +191,14 @@ def train(config):
         if step == config.train_steps:
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
-            acc_data = {
-                "conv_step": conv_step if conv_step is not None else step, 
-                "acc_list": acc_list
-                }
-            filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{config.input_length}.pkl"
-            with open(filename, "wb") as f:
-                pkl.dump(acc_data, f)
             break
+
+    acc_data = {"acc": acc_list}
+    
+    filename = f"./{config.summary_path}/{config.model_type}_seed_{config.seed}_seq_{int(config.input_length/4)}.pkl"
+    
+    with open(filename, "wb") as f:
+        pkl.dump(acc_data, f)
 
     print('Done training.')
     ###########################################################################
