@@ -2,10 +2,10 @@
 
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=Q1.4
+#SBATCH --job-name=Q1.3
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
-#SBATCH --time=01:00:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=32000M
 #SBATCH --array=1-9%8
 #SBATCH --output=./summaries/experiment_%a.out
@@ -27,5 +27,5 @@ HPARAMS_FILE=./hyperparam.txt
 # Good practice: define your directory where to save the models, and copy the job file to it
 # Run your code
 srun python -u train.py \
-                --model_type LSTM \
+                --model_type GRU \
                $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
