@@ -61,7 +61,7 @@ def train(config):
     config.sample_every = int(len(data_loader)/3)
     config.train_steps = len(data_loader)
 
-    delta_threshold = 0.005
+    delta_threshold = 0.05
     no_change = 0
     prev_acc = 0
 
@@ -113,49 +113,48 @@ def train(config):
 
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
-                pass
-                # n_samples = 5
-                # less_than = 15
-                # more_than = 60
-                # model.eval()
+                n_samples = 5
+                less_than = 15
+                more_than = 60
+                model.eval()
 
-                # with torch.no_grad():
+                with torch.no_grad():
 
-                #     for n in range(n_samples):
-                #         rand_idx = np.random.randint(dataset.vocab_size)
-                #         gen_txt = [rand_idx] # select a random index to generate sentence
+                    for n in range(n_samples):
+                        rand_idx = np.random.randint(dataset.vocab_size)
+                        gen_txt = [rand_idx] # select a random index to generate sentence
 
-                #         samples = dict()
+                        samples = dict()
                     
-                #         for t in range(more_than):
-                #             if t == 0:
-                #                 idx = torch.LongTensor([[rand_idx]]).to(device)
-                #                 output, (h, c) = model(idx)
+                        for t in range(more_than):
+                            if t == 0:
+                                idx = torch.LongTensor([[rand_idx]]).to(device)
+                                output, (h, c) = model(idx)
 
-                #             elif t + 1 == less_than:
-                #                 samples[less_than] = dataset.convert_to_string(gen_txt)
+                            elif t + 1 == less_than:
+                                samples[less_than] = dataset.convert_to_string(gen_txt)
 
-                #             elif t +1 == config.seq_length:
-                #                 samples[config.seq_length] = dataset.convert_to_string(gen_txt)
+                            elif t +1 == config.seq_length:
+                                samples[config.seq_length] = dataset.convert_to_string(gen_txt)
 
-                #             else:
-                #                 idx = torch.LongTensor([[idx]]).to(device)
-                #                 output, (h, c) = model(idx, (h, c))
+                            else:
+                                idx = torch.LongTensor([[idx]]).to(device)
+                                output, (h, c) = model(idx, (h, c))
                             
-                #             idx = torch.argmax(output).item()
-                #             gen_txt.append(idx)
+                            idx = torch.argmax(output).item()
+                            gen_txt.append(idx)
 
-                #         samples[more_than] = dataset.convert_to_string(gen_txt)
-                #         greedy_sent.append(samples)
+                        samples[more_than] = dataset.convert_to_string(gen_txt)
+                        greedy_sent.append(samples)
 
-                #     model.train()
+                    model.train()
 
-            if abs(prev_acc - accuracy) < delta_threshold:
+            if accuracy - prev_acc < delta_threshold:
                 no_change += 1
             else: 
                 no_change = 0
             
-            if no_change > 60:
+            if no_change > config.sample_every:
                 break
         
             if step == config.train_steps:
@@ -166,39 +165,46 @@ def train(config):
     
     print('Done training.')
 
-    # print("Temperature sampling")
-    # temperature_sent = list()
-    # model.eval()
+    print("Temperature sampling.")
+    
+    n_samples = 3
+    temperature_sent = list()
+    model.eval()
 
-    # rand_idx = np.random.randint(dataset.vocab_size)
-    # softmax = torch.nn.Softmax(dim=-1)
-    # classes = np.arange(dataset.vocab_size)
-    # for tao in [0.5, 1, 2]:
-    #     gen_txt = [rand_idx]
-    #     print(f"Temperature {tao}")
-    #     for t in range(config.seq_length):
-    #         idx = torch.tensor([[rand_idx]]).long().to(device)
-    #         if t == 0:
-    #             output, (h, c) = model(idx)
-    #         else:
-    #             output, (h, c) = model(idx, (h, c))
-            
-    #         distr= softmax(tao*output).squeeze().cpu().detach().numpy()
-    #         rand_idx = np.random.choice(classes, p=distr)
-    #         gen_txt.append(rand_idx)
+    softmax = torch.nn.Softmax(dim=-1)
+    
+    for n in range(n_samples):
+        output_idx = init_idx = np.random.randint(dataset.vocab_size)
+        
+        samples = dict()
+        
+        for tao in [0.5, 1, 2]:
+            gen_txt = [init_idx]
+            for t in range(config.seq_length):
+                if t == 0:
+                    idx = torch.LongTensor([[output_idx]]).to(device)
+                    output, (h, c) = model(idx)
+                else:
+                    idx = torch.LongTensor([[output_idx]]).to(device)
+                    output, (h, c) = model(idx, (h, c))
+                
+                distr= softmax(tao*output).squeeze()
+                output_idx = torch.multinomial(distr, 1).item()
+                gen_txt.append(output_idx)
 
-    #     gen_sent = dataset.convert_to_string(gen_txt)
-    #     print("Temp: ", gen_sent)
-
-    #     temp_sent.append((tao, gen_sent))
+            samples[tao] = dataset.convert_to_string(gen_txt)
+        
+        temperature_sent.append(samples)
 
     print("Saving data...")
 
-    train_data = dict(acc=acc_list, loss=loss_list)
+    train_data = dict(acc=acc_list, loss=loss_list, greedy_sent=greedy_sent, temperature_sent=temperature_sent)
+    train_data = train_data.cpu().detach()
+
     with open(f"{config.summary_path}data.pkl", "wb") as f:
         pkl.dump(train_data, f)
 
-    print("Rest easy")
+    print("Done saving data...")
 ###############################################################################
 ###############################################################################
 
