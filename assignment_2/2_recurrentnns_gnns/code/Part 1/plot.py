@@ -3,34 +3,34 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-def summary(model_type, input_length):
+def summary(model_type):
     DATA_DIR = "./summaries/"
-    seed = [0, 4, 17]
+    SEED = [0, 4, 17]
+    INPUT_LEN = [4, 5, 6]
 
-    print(f":: input {input_length} ::")
-    for s in seed:
-        with open(f"{DATA_DIR}{model_type}_seed_{s}_seq_{input_length}.pkl", "rb") as f:
-            acc_dict = pkl.load(f)
-            acc_list = acc_dict["acc"]
-            v = acc_dict["acc"][-1]
-            
-            print(f"seed {s}: {v}\tsteps: {len(acc_list)}")
-
-def whatever(model_type, input_length):
-    DATA_DIR = "./summaries/"
-    seed = [0, 4, 17]
     summ_data = list()
-    for s in seed:
-        with open(f"{DATA_DIR}{model_type}_seed_{s}_seq_{input_length}.pkl", "rb") as f:
-            orig_data = pkl.load(f)
-            
-            summ_data.append(len(orig_data["acc"]))
-            
-            if s == 0:
-                plot_data = orig_data["acc"]
+    stat_data = list()
 
-    m = np.mean(summ_data)
-    s = np.std(summ_data)
+    for input_length in INPUT_LEN:
+        print(f":: input {input_length} ::")
+
+        for s in SEED:
+            with open(f"{DATA_DIR}{model_type}_seed_{s}_seq_{input_length}.pkl", "rb") as f:
+                orig_data = pkl.load(f)["acc"]
+                v = orig_data[-1]
+
+                summ_data.append(len(orig_data))
+
+                stat_data.append(v)
+
+        m_a = np.mean(stat_data)
+        s_a = np.std(stat_data)
+
+        m_s = np.mean(summ_data)
+
+        print(f"mean: {m_a:.2f} - std: {s_a:.2f} - steps {m_s:.2f}")
+
+    
 
 
 def plot_figure(model_type):
@@ -59,10 +59,8 @@ def plot_figure(model_type):
 if __name__ == "__main__":
     print(":: LSTM ::")
     plot_figure("LSTM")
-    # for i in [4, 5, 6]:
-        # summary("LSTM", i)
+    summary("LSTM")
 
     print(":: GRU ::")
     plot_figure("GRU")
-    # for i in [4, 5, 6]:
-        # summary("GRU", i)
+    summary("GRU")

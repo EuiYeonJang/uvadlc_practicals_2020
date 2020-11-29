@@ -27,18 +27,21 @@ class TextGenerationModel(nn.Module):
 
         super(TextGenerationModel, self).__init__()
 
-        self.embedding_size = 10
-        self.embed = nn.Embedding(vocabulary_size, self.embedding_size)
+        embedding_size = 10
+        self.embed = nn.Embedding(vocabulary_size, embedding_size)
         
-        self.lstm = nn.LSTM(self.embedding_size, lstm_num_hidden, lstm_num_layers)
+        self.lstm = nn.LSTM(embedding_size, lstm_num_hidden, lstm_num_layers)
 
         self.output_layer = nn.Linear(lstm_num_hidden, vocabulary_size)
 
     def forward(self, x, prev_state=None):
         embed_x = self.embed(x)
         
-        p, prev_state = self.lstm(embed_x) if prev_state == None else self.lstm(embed_x, prev_state)
+        if prev_state == None:
+            p, prev_state = self.lstm(embed_x) # when not provided, both h_0 and c_0 default to zero
+        else:
+            p, prev_state = self.lstm(embed_x, prev_state)
 
-        logits = self.output_layer(p)
+        logits = self.output_layer(p) # no softmax since using CrossEntropyLoss
 
         return logits, prev_state
