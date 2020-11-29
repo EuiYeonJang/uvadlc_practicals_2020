@@ -113,8 +113,8 @@ def train(config):
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
                 n_samples = 5
-                less_than = 15
-                more_than = 60
+                less_than = int(config.seq_length/2)
+                more_than = config.seq_length*2
                 model.eval()
 
                 with torch.no_grad():
@@ -147,17 +147,7 @@ def train(config):
                         greedy_sent.append(samples)
 
                     model.train()
-                # pass
 
-            if accuracy - prev_acc < delta_threshold:
-                no_change += 1
-            else: 
-                no_change = 0
-
-            prev_acc = accuracy
-            
-            if no_change > config.train_steps:
-                break
         
             if step == config.train_steps:
                 # If you receive a PyTorch data-loader error,
