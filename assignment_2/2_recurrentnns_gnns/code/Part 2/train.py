@@ -99,17 +99,19 @@ def bonus(config):
     # Initialize the model that we are going to use
     model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, device).to(device)
 
-    print("Loading model")
-    state_dict = torch.load(f"{config.summary_path}trained_grimms.mdl")
+    print("Loading model...")
+    state_dict = torch.load(f"{config.summary_path}{config.model_name}.mdl")
     model.load_state_dict(state_dict)
     
     softmax = torch.nn.Softmax(dim=-1)
 
+    print("Generating sentence...")
     start_sent = "Sleeping beauty is "
     finish_sent_l = []
 
     for i, s in enumerate(start_sent):
         s_idx = dataset._char_to_ix[s]
+        s_idx = torch.LongTensor([[s_idx]]).to(device)
         if i == 0:
             _, (h, c) = model(s_idx)
         else:
@@ -302,12 +304,18 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default=("cpu" if not torch.cuda.is_available() else "cuda"),
                         help="Device to run the model on.")
 
+
+    parser.add_argument('--load_model', type=bool, default=False,
+                            help="Indicate to load saved model.")
+    parser.add_argument('--model_name', type=str, default="trained_dem",
+                            help="Specify to name of saved model.")
     # If needed/wanted, feel free to add more arguments
     config = parser.parse_args()
 
     print(config)
 
     # Train the model
-    train(config)
-
+    if not config.load_model:
+        train(config)
+    
     bonus(config)

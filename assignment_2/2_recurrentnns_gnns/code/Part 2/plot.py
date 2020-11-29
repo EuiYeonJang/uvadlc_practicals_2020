@@ -15,10 +15,9 @@ def plot_figure(acc_list, loss_list):
     ax2=ax.twinx()
     ax2.plot(loss_list, color="tab:orange", alpha=0.8)
     ax2.set_ylabel("Loss",color="tab:orange")
-    # plt.show()
+    fig.savefig(f'{DATA_DIR}plot.pdf')
     
-    fig.savefig(f'{DATA_DIR}plot.pdf') #, bbox_inches='tight')
-    # plt.legend()
+    plt.show()
 
 
 def print_sent(greedy, temper):
@@ -49,25 +48,6 @@ def print_sent(greedy, temper):
 
     return
 
-
-def fuck_cuda(d):
-    DATA_DIR = "./summaries/"
-    T = 30
-    less_than = int(T/2)
-    more_than = 2*T
-    sent = [less_than, T, more_than]
-    temp = [0.5, 1.0, 2.0]
-
-    nd = dict()
-
-    nd["acc"] = d["acc"]
-    nd["loss"] = d["loss"]
-
-    with open(f"{DATA_DIR}new_data.pkl", "wb") as f:
-        pkl.dump(nd, f)
-
-
-
 def get_data():
     DATA_DIR = "./summaries/"
 
@@ -75,13 +55,12 @@ def get_data():
         d = pkl.load(f)
 
     acc_list = d["acc"]
-    loss_list = [i.cpu().detach() for i in d["loss"]]
+    loss_list = d["loss"]
 
     greedy = d["greedy_sent"]
     temper = d["temperature_sent"]
 
-    # fuck_cuda(d)
-    # plot_figure(acc_list, loss_list)
+    plot_figure(acc_list, loss_list)
 
     print_sent(greedy, temper)
 
