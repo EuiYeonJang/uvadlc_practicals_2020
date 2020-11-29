@@ -63,7 +63,7 @@ def train(config):
 
     delta_threshold = 0.05
     no_change = 0
-    prev_acc = 0
+    max_acc = 0
 
     for epoch in range(3):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
@@ -113,48 +113,51 @@ def train(config):
 
             if (step + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
-                n_samples = 5
-                less_than = 15
-                more_than = 60
-                model.eval()
+                # n_samples = 5
+                # less_than = 15
+                # more_than = 60
+                # model.eval()
 
-                with torch.no_grad():
+                # with torch.no_grad():
 
-                    for n in range(n_samples):
-                        rand_idx = np.random.randint(dataset.vocab_size)
-                        gen_txt = [rand_idx] # select a random index to generate sentence
+                #     for n in range(n_samples):
+                #         rand_idx = np.random.randint(dataset.vocab_size)
+                #         gen_txt = [rand_idx] # select a random index to generate sentence
 
-                        samples = dict()
+                #         samples = dict()
                     
-                        for t in range(more_than):
-                            if t == 0:
-                                idx = torch.LongTensor([[rand_idx]]).to(device)
-                                output, (h, c) = model(idx)
+                #         for t in range(more_than):
+                #             if t == 0:
+                #                 idx = torch.LongTensor([[rand_idx]]).to(device)
+                #                 output, (h, c) = model(idx)
 
-                            elif t + 1 == less_than:
-                                samples[less_than] = dataset.convert_to_string(gen_txt)
+                #             elif t + 1 == less_than:
+                #                 samples[less_than] = dataset.convert_to_string(gen_txt)
 
-                            elif t +1 == config.seq_length:
-                                samples[config.seq_length] = dataset.convert_to_string(gen_txt)
+                #             elif t +1 == config.seq_length:
+                #                 samples[config.seq_length] = dataset.convert_to_string(gen_txt)
 
-                            else:
-                                idx = torch.LongTensor([[idx]]).to(device)
-                                output, (h, c) = model(idx, (h, c))
+                #             else:
+                #                 idx = torch.LongTensor([[idx]]).to(device)
+                #                 output, (h, c) = model(idx, (h, c))
                             
-                            idx = torch.argmax(output).item()
-                            gen_txt.append(idx)
+                #             idx = torch.argmax(output).item()
+                #             gen_txt.append(idx)
 
-                        samples[more_than] = dataset.convert_to_string(gen_txt)
-                        greedy_sent.append(samples)
+                #         samples[more_than] = dataset.convert_to_string(gen_txt)
+                #         greedy_sent.append(samples)
 
-                    model.train()
+                #     model.train()
+                pass
 
-            if accuracy - prev_acc < delta_threshold:
+            if max_acc - accuracy < delta_threshold:
                 no_change += 1
             else: 
                 no_change = 0
+
+            max_acc = max(max_acc, accuracy)
             
-            if no_change > config.sample_every:
+            if no_change > config.train_steps:
                 break
         
             if step == config.train_steps:
@@ -171,35 +174,34 @@ def train(config):
     temperature_sent = list()
     model.eval()
 
-    softmax = torch.nn.Softmax(dim=-1)
+    # softmax = torch.nn.LogSoftmax(dim=-1)
     
-    for n in range(n_samples):
-        output_idx = init_idx = np.random.randint(dataset.vocab_size)
+    # for n in range(n_samples):
+    #     output_idx = init_idx = np.random.randint(dataset.vocab_size)
         
-        samples = dict()
+    #     samples = dict()
         
-        for tao in [0.5, 1, 2]:
-            gen_txt = [init_idx]
-            for t in range(config.seq_length):
-                if t == 0:
-                    idx = torch.LongTensor([[output_idx]]).to(device)
-                    output, (h, c) = model(idx)
-                else:
-                    idx = torch.LongTensor([[output_idx]]).to(device)
-                    output, (h, c) = model(idx, (h, c))
+    #     for tao in [0.5, 1, 2]:
+    #         gen_txt = [init_idx]
+    #         for t in range(config.seq_length):
+    #             if t == 0:
+    #                 idx = torch.LongTensor([[output_idx]]).to(device)
+    #                 output, (h, c) = model(idx)
+    #             else:
+    #                 idx = torch.LongTensor([[output_idx]]).to(device)
+    #                 output, (h, c) = model(idx, (h, c))
                 
-                distr= softmax(tao*output).squeeze()
-                output_idx = torch.multinomial(distr, 1).item()
-                gen_txt.append(output_idx)
+    #             distr= softmax(tao*output).squeeze()
+    #             output_idx = torch.multinomial(distr, 1).item()
+    #             gen_txt.append(output_idx)
 
-            samples[tao] = dataset.convert_to_string(gen_txt)
+    #         samples[tao] = dataset.convert_to_string(gen_txt)
         
-        temperature_sent.append(samples)
+    #     temperature_sent.append(samples)
 
     print("Saving data...")
 
     train_data = dict(acc=acc_list, loss=loss_list, greedy_sent=greedy_sent, temperature_sent=temperature_sent)
-    train_data = train_data.cpu().detach()
 
     with open(f"{config.summary_path}data.pkl", "wb") as f:
         pkl.dump(train_data, f)

@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --time=01:00:00
 #SBATCH --mem=32000M
-#SBATCH --output=2_1.out
+#SBATCH --output=temp.out
 
 module purge
 module load 2019
