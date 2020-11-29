@@ -115,9 +115,12 @@ def bonus(config):
         if i == 0:
             _, (h, c) = model(s_idx)
         else:
-            output_idx, (h, c) = model(s_idx, (h, c))
+            output, (h, c) = model(s_idx, (h, c))
+    
+    distr= softmax(2*output).squeeze()
+    output_idx = torch.multinomial(distr, 1).item()
 
-    period = dataset._char_to_ix(["."])
+    period = dataset._char_to_ix["."]
 
     while output_idx != period:
         finish_sent_l.append(output_idx)
