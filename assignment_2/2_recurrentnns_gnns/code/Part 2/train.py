@@ -163,7 +163,7 @@ def train(config):
     temperature_sent = list()
     model.eval()
 
-    softmax = torch.nn.LogSoftmax(dim=-1)
+    softmax = torch.nn.Softmax(dim=-1)
     
     for n in range(n_samples):
         output_idx = init_idx = np.random.randint(dataset.vocab_size)
