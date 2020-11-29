@@ -34,6 +34,99 @@ from model import TextGenerationModel
 
 ###############################################################################
 
+def scale(config):
+    # Initialize the device which to run the model on
+    device = torch.device(config.device)
+
+    # Initialize the dataset and data loader (note the +1)
+    dataset = TextDataset(config.txt_file, config.seq_length)  # FIXME
+    data_loader = DataLoader(dataset, config.batch_size)
+
+    # Initialize the model that we are going to use
+    model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, device).to(device)
+
+    print("Loading model")
+    state_dict = torch.load(f"{config.summary_path}trained_dem.mdl")
+    model.load_state_dict(state_dict)
+    
+    print("Temperature sampling.")
+    
+    n_samples = 3
+    temperature_sent = list()
+    model.eval()
+
+    softmax = torch.nn.Softmax(dim=-1)
+
+    for n in range(n_samples):
+        output_idx = init_idx = np.random.randint(dataset.vocab_size)
+        
+        samples = dict()
+        
+        for tao in [0.5, 1, 2]:
+            gen_txt = [init_idx]
+            for t in range(config.seq_length):
+                if t == 0:
+                    idx = torch.LongTensor([[output_idx]]).to(device)
+                    output, (h, c) = model(idx)
+                else:
+                    idx = torch.LongTensor([[output_idx]]).to(device)
+                    output, (h, c) = model(idx, (h, c))
+                
+                distr= softmax(tao*output).squeeze()
+                output_idx = torch.multinomial(distr, 1).item()
+                gen_txt.append(output_idx)
+
+            samples[tao] = dataset.convert_to_string(gen_txt)
+        
+        temperature_sent.append(samples)
+
+    
+
+    # train_data = dict(acc=acc_list, loss=loss_list, greedy_sent=greedy_sent, temperature_sent=temperature_sent)
+
+    # with open(f"{config.summary_path}data.pkl", "wb") as f:
+        # pkl.dump(train_data, f)
+
+
+def bonus(config):
+    # Initialize the device which to run the model on
+    device = torch.device(config.device)
+
+    # Initialize the dataset and data loader (note the +1)
+    dataset = TextDataset(config.txt_file, config.seq_length)  # FIXME
+    data_loader = DataLoader(dataset, config.batch_size)
+
+    # Initialize the model that we are going to use
+    model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, device).to(device)
+
+    print("Loading model")
+    state_dict = torch.load(f"{config.summary_path}trained_grimms.mdl")
+    model.load_state_dict(state_dict)
+    
+    softmax = torch.nn.Softmax(dim=-1)
+
+    start_sent = "Sleeping beauty is "
+    finish_sent_l = []
+
+    for i, s in enumerate(start_sent):
+        s_idx = dataset._char_to_ix[s]
+        if i == 0:
+            _, (h, c) = model(s_idx)
+        else:
+            output_idx, (h, c) = model(s_idx, (h, c))
+
+    period = dataset._char_to_ix(["."])
+
+    while output_idx != period:
+        finish_sent_l.append(output_idx)
+
+        output, (h, c) = model(s_idx, (h, c))
+        distr= softmax(2*output).squeeze()
+        output_idx = torch.multinomial(distr, 1).item()
+
+    finish_sent = dataset.convert_to_string(finish_sent_l)
+    print("".join([start_sent, finish_sent]))
+
 
 def train(config):
 
@@ -156,66 +249,11 @@ def train(config):
     
     print('Done training.')
 
-    print("Temperature sampling.")
+    print("Saving model.")
+    state_dict = model.state_dict()
+    torch.save(state_dict, f"{config.summary_path}trained_grimms.mdl")
+
     
-    n_samples = 3
-    temperature_sent = list()
-    model.eval()
-
-    softmax = torch.nn.Softmax(dim=-1)
-
-    start_sent = "Sleeping beauty is"
-    finish_sent_l = []
-
-    for i, s in enumerate(len(start_sent)):
-        s_idx = dataset._char_to_ix[s]
-        if i == 0:
-            _, (h, c) = model(s_idx)
-        else:
-            output_idx, (h, c) = model(s_idx, (h, c))
-
-    period = dataset._char_to_ix(["."])
-
-    while output_idx != period:
-        finish_sent_l.append(output_idx)
-
-        output, (h, c) = model(s_idx, (h, c))
-        distr= softmax(2*output).squeeze()
-        output_idx = torch.multinomial(distr, 1).item()
-
-    finish_sent = dataset.convert_to_string(finish_sent_l)
-    print("".join([start_sent, finish_sent]))
-    # for n in range(n_samples):
-    #     output_idx = init_idx = np.random.randint(dataset.vocab_size)
-        
-    #     samples = dict()
-        
-    #     for tao in [0.5, 1, 2]:
-    #         gen_txt = [init_idx]
-    #         for t in range(config.seq_length):
-    #             if t == 0:
-    #                 idx = torch.LongTensor([[output_idx]]).to(device)
-    #                 output, (h, c) = model(idx)
-    #             else:
-    #                 idx = torch.LongTensor([[output_idx]]).to(device)
-    #                 output, (h, c) = model(idx, (h, c))
-                
-    #             distr= softmax(tao*output).squeeze()
-    #             output_idx = torch.multinomial(distr, 1).item()
-    #             gen_txt.append(output_idx)
-
-    #         samples[tao] = dataset.convert_to_string(gen_txt)
-        
-    #     temperature_sent.append(samples)
-
-    # print("Saving data...")
-
-    # train_data = dict(acc=acc_list, loss=loss_list, greedy_sent=greedy_sent, temperature_sent=temperature_sent)
-
-    # with open(f"{config.summary_path}data.pkl", "wb") as f:
-    #     pkl.dump(train_data, f)
-
-    print("Done saving data...")
 ###############################################################################
 ###############################################################################
 
@@ -271,3 +309,5 @@ if __name__ == "__main__":
 
     # Train the model
     train(config)
+
+    bonus(config)
