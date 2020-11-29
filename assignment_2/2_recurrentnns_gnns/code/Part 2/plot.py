@@ -1,6 +1,6 @@
 import pickle as pkl
 import matplotlib.pyplot as plt
-# import torch
+import torch
 # import io
 
 
@@ -15,9 +15,9 @@ def plot_figure(acc_list, loss_list):
     ax2=ax.twinx()
     ax2.plot(loss_list, color="tab:orange", alpha=0.8)
     ax2.set_ylabel("Loss",color="tab:orange")
-    plt.show()
+    # plt.show()
     
-    # fig.savefig(f'{DATA_DIR}plot.pdf') #, bbox_inches='tight')
+    fig.savefig(f'{DATA_DIR}plot.pdf') #, bbox_inches='tight')
     # plt.legend()
 
 
@@ -74,16 +74,16 @@ def get_data():
     with open(f"{DATA_DIR}data.pkl", "rb") as f:
         d = pkl.load(f)
 
-    # acc_list = d["acc"]
-    # loss_list = d["loss"]
+    acc_list = d["acc"]
+    loss_list = [i.cpu().detach() for i in d["loss"]]
 
     greedy = d["greedy_sent"]
     temper = d["temperature_sent"]
 
-    fuck_cuda(d)
+    # fuck_cuda(d)
     # plot_figure(acc_list, loss_list)
 
-    # print_sent(greedy, temper)
+    print_sent(greedy, temper)
 
 if __name__ == "__main__":
     get_data()

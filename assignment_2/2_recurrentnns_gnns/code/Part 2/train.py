@@ -58,12 +58,10 @@ def train(config):
     
     model.train()
 
-    config.sample_every = int(len(data_loader)/3)
+    config.sample_every = int((2*len(data_loader))/3)
     config.train_steps = len(data_loader)
 
-    delta_threshold = 0.05
-    no_change = 0
-    prev_acc = 0
+    train_stage = 0
 
     for epoch in range(2):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
@@ -110,7 +108,7 @@ def train(config):
                         ))
 
 
-            if (step + 1) % config.sample_every == 0:
+            if (train_stage + 1) % config.sample_every == 0:
                 # Generate some sentences by sampling from the model
                 n_samples = 5
                 less_than = int(config.seq_length/2)
@@ -148,7 +146,8 @@ def train(config):
 
                     model.train()
 
-        
+            train_stage += 1
+            
             if step == config.train_steps:
                 # If you receive a PyTorch data-loader error,
                 # check this bug report:
