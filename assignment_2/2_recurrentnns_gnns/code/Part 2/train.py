@@ -161,7 +161,7 @@ def train(config):
 
     train_stage = 0
 
-    for epoch in range(2):
+    for epoch in range(4):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
             # Only for time measurement of step through network
             t1 = time.time()
