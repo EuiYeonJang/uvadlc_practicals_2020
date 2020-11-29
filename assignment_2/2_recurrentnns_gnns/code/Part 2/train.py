@@ -100,7 +100,7 @@ def bonus(config):
     model = TextGenerationModel(config.batch_size, config.seq_length, dataset.vocab_size, config.lstm_num_hidden, config.lstm_num_layers, device).to(device)
 
     print("Loading model...")
-    state_dict = torch.load(f"{config.summary_path}{config.model_name}.mdl")
+    state_dict = torch.load(f"{config.summary_path}trained_grimms.mdl")
     model.load_state_dict(state_dict)
     
     softmax = torch.nn.Softmax(dim=-1)
@@ -310,8 +310,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--load_model', type=bool, default=False,
                             help="Indicate to load saved model.")
-    parser.add_argument('--model_name', type=str, default="trained_dem",
-                            help="Specify to name of saved model.")
+                            
     # If needed/wanted, feel free to add more arguments
     config = parser.parse_args()
 
