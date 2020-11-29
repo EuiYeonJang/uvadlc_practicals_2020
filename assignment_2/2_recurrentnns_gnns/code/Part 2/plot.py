@@ -29,19 +29,23 @@ def print_sent(greedy, temper):
     sent = [less_than, T, more_than]
     temp = [0.5, 1.0, 2.0]
 
+    i = 1
     for gn in greedy:
-        print(f"SAMPLE {gn+1}")
+        print(f"SAMPLE {i}")
         for t in sent:
             print(f"\tT={t} ::\t", gn[t])
         
         print("")
-
+        i += 1
+    
+    i = 1
     for tn in temper:
-        print(f"SAMPLE {tn+1}")
+        print(f"SAMPLE {i}")
         for tao in temp:
             print(f"\ttemp={tao} ::\t", tn[tao])
         
         print("")
+        i += 1
 
     return
 
@@ -54,11 +58,13 @@ def fuck_cuda(d):
     sent = [less_than, T, more_than]
     temp = [0.5, 1.0, 2.0]
 
-    d["acc"] = d["acc"].cpu().detach()
-    d["loss"] = d["loss"].cpu().detach()
+    nd = dict()
+
+    nd["acc"] = d["acc"]
+    nd["loss"] = d["loss"]
 
     with open(f"{DATA_DIR}new_data.pkl", "wb") as f:
-        pkl.dump(d, f)
+        pkl.dump(nd, f)
 
 
 
@@ -71,8 +77,8 @@ def get_data():
     # acc_list = d["acc"]
     # loss_list = d["loss"]
 
-    # greedy = d["greedy_sent"]
-    # temper = d["temperature_sent"]
+    greedy = d["greedy_sent"]
+    temper = d["temperature_sent"]
 
     fuck_cuda(d)
     # plot_figure(acc_list, loss_list)
