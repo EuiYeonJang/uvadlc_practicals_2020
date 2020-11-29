@@ -5,7 +5,7 @@
 #SBATCH --job-name=Q2.1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
-#SBATCH --time=00:05:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=32000M
 #SBATCH --output=sent.out
 
@@ -21,4 +21,5 @@ module load Anaconda3/2018.12
 # Activate your environment
 source activate dl2020
 # Run your code
-srun python -u train.py --load_model True --model_name trained_grimms
+srun python -u train.py
+#--load_model True --model_name trained_grimms
