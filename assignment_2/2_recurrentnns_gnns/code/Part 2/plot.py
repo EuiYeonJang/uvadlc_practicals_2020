@@ -46,21 +46,39 @@ def print_sent(greedy, temper):
     return
 
 
+def fuck_cuda(d):
+    DATA_DIR = "./summaries/"
+    T = 30
+    less_than = int(T/2)
+    more_than = 2*T
+    sent = [less_than, T, more_than]
+    temp = [0.5, 1.0, 2.0]
+
+    d["acc"] = d["acc"].cpu().detach()
+    d["loss"] = d["loss"].cpu().detach()
+
+    with open(f"{DATA_DIR}new_data.pkl", "wb") as f:
+        pkl.dump(d, f)
+
+
+
 def get_data():
     DATA_DIR = "./summaries/"
 
     with open(f"{DATA_DIR}data.pkl", "rb") as f:
         d = pkl.load(f)
 
-    acc_list = d["acc"]
-    loss_list = d["loss"]
+    # acc_list = d["acc"]
+    # loss_list = d["loss"]
 
-    greedy = d["greedy_sent"]
-    temper = d["temperature_sent"]
+    # greedy = d["greedy_sent"]
+    # temper = d["temperature_sent"]
 
-    plot_figure(acc_list, loss_list)
+    fuck_cuda(d)
+    # plot_figure(acc_list, loss_list)
 
     # print_sent(greedy, temper)
 
 if __name__ == "__main__":
     get_data()
+    
