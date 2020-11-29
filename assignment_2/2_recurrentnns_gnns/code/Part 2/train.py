@@ -63,7 +63,7 @@ def train(config):
 
     delta_threshold = 0.05
     no_change = 0
-    max_acc = 0
+    prev_acc = 0
 
     for epoch in range(3):
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
@@ -92,14 +92,14 @@ def train(config):
             
             preds = torch.argmax(preds, dim=1)
             correct = (preds == batch_targets).sum().item()
-            accuracy = correct / (config.batch_size*config.seq_length) # FIXME
+            accuracy = correct / (preds.shape[0]*preds.shape[1]) # FIXME
             acc_list.append(accuracy)
 
             # Just for time measurement
             t2 = time.time()
             examples_per_second = config.batch_size/float(t2-t1)
 
-
+            break
             if (step + 1) % config.print_every == 0:
 
                 print("[{}] Train Step {:04d}/{:04d}, Epoch {} Batch Size = {}, \
@@ -150,12 +150,12 @@ def train(config):
                 #     model.train()
                 pass
 
-            if max_acc - accuracy < delta_threshold:
+            if accuracy - prev_acc < delta_threshold:
                 no_change += 1
             else: 
                 no_change = 0
 
-            max_acc = max(max_acc, accuracy)
+            prev_acc = accuracy
             
             if no_change > config.train_steps:
                 break
