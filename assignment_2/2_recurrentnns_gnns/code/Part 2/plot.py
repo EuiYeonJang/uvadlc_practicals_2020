@@ -15,7 +15,7 @@ def plot_figure(acc_list, loss_list):
     ax2=ax.twinx()
     ax2.plot(loss_list, color="tab:orange", alpha=0.8)
     ax2.set_ylabel("Loss",color="tab:orange")
-    fig.savefig(f'{DATA_DIR}plot.pdf')
+    fig.savefig(f'{DATA_DIR}LSTM.pdf')
     
     plt.show()
 
@@ -28,25 +28,21 @@ def print_sent(greedy, temper):
     sent = [less_than, T, more_than]
     temp = [0.5, 1.0, 2.0]
 
-    i = 1
-    for gn in greedy:
-        print(f"SAMPLE {i}")
+    print("Greedy")
+    for i, gn in enumerate(greedy):
+        print(f"\nSAMPLE {i+1}")
         for t in sent:
             print(f"\tT={t} ::\t", gn[t])
-        
-        print("")
-        i += 1
     
-    i = 1
-    for tn in temper:
-        print(f"SAMPLE {i}")
+    print("Tempered")
+    for i, tn in enumerate(temper):
+        print(f"\nSAMPLE {i}")
         for tao in temp:
             print(f"\ttemp={tao} ::\t", tn[tao])
         
-        print("")
-        i += 1
 
     return
+
 
 def get_data():
     DATA_DIR = "./summaries/"
