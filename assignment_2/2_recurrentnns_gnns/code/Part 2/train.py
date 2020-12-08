@@ -86,7 +86,7 @@ def scale(config):
     return temperature_sent
 
 
-def sample(model, device, config):
+def sample(model, device, config, dataset):
     greedy_sent = list()
     n_samples = 5
     less_than = int(config.seq_length/2)
@@ -241,7 +241,7 @@ def train(config):
                 model.eval()
 
                 with torch.no_grad():
-                    sample_sent = sample(model, device, config)
+                    sample_sent = sample(model, device, config, dataset)
                     greedy_sent.extend(sample_sent)
                     
                 model.train()

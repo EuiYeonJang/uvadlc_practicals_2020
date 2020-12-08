@@ -2,12 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 
+DATA_DIR = "./summaries/"
+SEED = [0, 4, 17]
+INPUT_LEN = [4, 5, 6]
+COLOUR_MAP = {
+    4: "tab:blue",
+    5: "tab:green",
+    6: "tab:red"
+}
 
 def summary(model_type):
-    DATA_DIR = "./summaries/"
-    SEED = [0, 4, 17]
-    INPUT_LEN = [4, 5, 6]
-
     summ_data = list()
     stat_data = list()
 
@@ -34,14 +38,6 @@ def summary(model_type):
 
 
 def plot_figure(model_type):
-    DATA_DIR = "./summaries/"
-    INPUT_LEN = [6, 5, 4]
-    COLOUR_MAP = {
-        4: "tab:blue",
-        5: "tab:green",
-        6: "tab:red"
-    }
-
     summ_data = list()
     for input_length in INPUT_LEN:
         with open(f"{DATA_DIR}{model_type}_seed_0_seq_{input_length}.pkl", "rb") as f:
