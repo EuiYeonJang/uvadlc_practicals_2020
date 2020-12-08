@@ -31,9 +31,10 @@ def sample_reparameterize(mean, std):
         z - A sample of the distributions, with gradient support for both mean and std. 
             The tensor should have the same shape as the mean and std input tensors.
     """
+    # TODO log_std or just std?
+    epsilon = torch.normal(mean=0., std=1., size=mean.shape)
+    z = mean + epsilon * std
 
-    z = None
-    raise NotImplementedError
     return z
 
 
@@ -48,9 +49,11 @@ def KLD(mean, log_std):
         KLD - Tensor with one less dimension than mean and log_std (summed over last dimension).
               The values represent the Kullback-Leibler divergence to unit Gaussians.
     """
-
-    KLD = None
-    raise NotImplementedError
+    # TODO what to do with log_std?
+    log_var = 2 * log_std
+    var = log_var.exp()
+    KLD = 0.5 * (var + (mean ** 2) - 1 - log_var)
+    
     return KLD
 
 
@@ -63,8 +66,12 @@ def elbo_to_bpd(elbo, img_shape):
     Outputs:
         bpd - The negative log likelihood in bits per dimension for the given image.
     """
-    bpd = None
-    raise NotImplementedError
+    # NOTE Alex
+    sum_neg_log = torch.sum(elbo)
+    base = torch.log2(torch.exp(torch.ones(1,)))
+    inv_prod =  torch.tensor(1.) / torch.prod(torch.tensor(img_shape))
+    bpd = sum_neg_log * base * inv_prod
+
     return bpd
 
 
