@@ -42,7 +42,6 @@ class MLPEncoder(nn.Module):
         combined_z_dim = 2*z_dim
 
         if len(hidden_dims) == 0:
-            # TODO Alex last softmax layer not included because of CrossEntropyLoss
             list_modules = [nn.Linear(input_dim, combined_z_dim)]
 
         else:
@@ -51,7 +50,6 @@ class MLPEncoder(nn.Module):
             for i in range(1, len(hidden_dims)):
                 list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), nn.ReLU()])
             
-            # TODO Alex last softmax layer not included because of CrossEntropyLoss
             list_modules.extend([nn.Linear(hidden_dims[-1], combined_z_dim)])
 
         self.net = nn.Sequential(*list_modules)
@@ -98,9 +96,9 @@ class MLPDecoder(nn.Module):
         # For an intial architecture, you can use a sequence of linear layers and ReLU activations.
         # Feel free to experiment with the architecture yourself, but the one specified here is 
         # sufficient for the assignment.
+
         # NOTE Alex
 
-        self.z_dim = z_dim
         output_dim = output_shape[0] * output_shape[1] * output_shape[2]
         
         if len(hidden_dims) == 0:

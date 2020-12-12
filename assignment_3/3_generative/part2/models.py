@@ -38,7 +38,25 @@ class GeneratorMLP(nn.Module):
         # You are allowed to experiment with the architecture and change the activation function, normalization, etc.
         # However, the default setup is sufficient to generate fine images and gain full points in the assignment.
         # The default setup is a sequence of Linear, Dropout, LeakyReLU (alpha=0.2)
-        raise NotImplementedError
+
+        # NOTE Alex
+        self.output_shape = output_shape
+        flatten_output_shape = output_shape[0] * output_shape[1] * output_shape[2]
+
+        if len(hidden_dims) == 0:
+            list_modules = [nn.Linear(z_dim, flatten_output_shape)]
+
+        else:
+            list_modules = [nn.Linear(z_dim, hidden_dims[0]), nn.LeakyReLU(negative_slope =0.2)]
+
+            for i in range(1, len(hidden_dims)):
+                list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), \
+                    nn.Dropout(dp_rate),nn.LeakyReLU(negative_slope =0.2)])
+            
+            # TODO hmmm?
+            list_modules.extend([nn.Linear(hidden_dims[-1], flatten_output_shape), nn.Tanh()])
+
+        self.net = nn.Sequential(*list_modules)
 
     def forward(self, z):
         """
@@ -47,8 +65,11 @@ class GeneratorMLP(nn.Module):
         Outputs:
             x - Generated image of shape [B,output_shape[0],output_shape[1],output_shape[2]]
         """
-        x = None
-        raise NotImplementedError
+        # NOTE Alex
+        B, _ = z.shape
+        x = self.net(z)
+        x = x.reshape((B, self.output_shape[0],  self.output_shape[1],  self.output_shape[2]))
+
         return x
 
     @property
@@ -75,7 +96,22 @@ class DiscriminatorMLP(nn.Module):
         # You are allowed to experiment with the architecture and change the activation function, normalization, etc.
         # However, the default setup is sufficient to generate fine images and gain full points in the assignment.
         # The default setup is the same as the generator: a sequence of Linear, Dropout, LeakyReLU (alpha=0.2)
-        raise NotImplementedError
+        
+        # NOTE Alex
+
+        if len(hidden_dims) == 0:
+            list_modules = [nn.Linear(input_dims, 1)]
+
+        else:
+            list_modules = [nn.Linear(input_dims, hidden_dims[0]), nn.LeakyReLU(negative_slope =0.2)]
+
+            for i in range(1, len(hidden_dims)):
+                list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), \
+                    nn.Dropout(dp_rate),nn.LeakyReLU(negative_slope =0.2)])
+            
+            list_modules.extend([nn.Linear(hidden_dims[-1], 1)])
+
+        self.net = nn.Sequential(*list_modules)
 
     def forward(self, x):
         """
@@ -86,6 +122,9 @@ class DiscriminatorMLP(nn.Module):
                     Note that this should be a logit output *without* a sigmoid applied on it.
                     Shape: [B,1]
         """
-        preds = None
-        raise NotImplementedError
+        
+        # NOTE Alex
+        x = x.reshape((x.shape[0], -1))
+        preds = self.net(x)
+        
         return preds
