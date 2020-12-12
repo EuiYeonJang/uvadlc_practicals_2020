@@ -265,6 +265,7 @@ def main(args):
     epoch_iterator = (trange(1, args.epochs + 1, desc=f"{args.model} VAE")
                       if args.progress_bar else range(1, args.epochs + 1))
     for epoch in epoch_iterator:
+        print("epoch", epoch)
         # Training epoch
         train_iterator = (tqdm(train_loader, desc="Training", leave=False)
                           if args.progress_bar else train_loader)
@@ -274,6 +275,7 @@ def main(args):
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)
         epoch_val_bpd, val_rec_loss, val_reg_loss = test_vae(model, val_iterator)
+        print(epoch_val_bpd, val_rec_loss, val_reg_loss)
 
         # Logging to TensorBoard
         summary_writer.add_scalars(
