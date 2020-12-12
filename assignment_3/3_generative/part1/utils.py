@@ -70,9 +70,9 @@ def elbo_to_bpd(elbo, img_shape):
     img_shape = [img_shape[1], img_shape[2], img_shape[3]]
     
     sum_neg_log = torch.sum(elbo)
-    base = torch.log2(torch.exp(torch.ones(1,)))
+    base = torch.log2(torch.exp(torch.ones(1,))).to(elbo.device)
     inv_prod =  torch.tensor(1.) / torch.prod(torch.tensor(img_shape))
-    bpd = sum_neg_log * base * inv_prod
+    bpd = sum_neg_log * base * inv_prod.to(elbo.device)
 
     return bpd
 
