@@ -1,0 +1,17 @@
+Using device cuda:0
+Epoch 1
+Traceback (most recent call last):
+  File "train_torch.py", line 356, in <module>
+    main(args)
+  File "train_torch.py", line 272, in main
+    model, train_iterator, optimizer)
+  File "train_torch.py", line 196, in train_vae
+    rec_loss, reg_loss, bpd = model(batch_inputs)
+  File "/home/lgpu0417/.conda/envs/dl2020/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "train_torch.py", line 81, in forward
+    bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
+  File "/home/lgpu0417/uvadlc_practicals_2020/assignment_3/3_generative/part1/utils.py", line 75, in elbo_to_bpd
+    bpd = sum_neg_log * base * inv_prod
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+srun: error: r31n4: task 0: Exited with exit code 1
