@@ -95,7 +95,7 @@ class VAE(nn.Module):
                      between 0 and 1 from which we obtain "x_samples"
         """
 
-        z = torch.randn(size=(batch_size, self.z_dim))
+        z = torch.randn(size=(batch_size, self.z_dim)).to(self.decoder.device)
         x_mean = torch.sigmoid(self.decoder(z))
         x_samples = (x_mean > 0.5).float() 
         return x_samples, x_mean
