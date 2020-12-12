@@ -73,14 +73,15 @@ class VAE(nn.Module):
 
         mu, log_std = self.encoder(imgs)
         z = sample_reparameterize(mu, log_std)
-        print(z.shape)
-        rec = self.decoder(z)
-        p = imgs * torch.log(rec) * (1- imgs) * torch.log(1 - rec)
-        print(p.shape)
-        L_rec = - torch.sum(z*p)
-        L_reg = KLD(mu, log_std)
-        bpd = elbo_to_bpd(L_rec + L_reg)
-        return L_rec, L_reg, bpd
+        rec = torch.sigmoid(self.decoder(z))
+        L_rec = F.binary_cross_entropy(rec, imgs, reduction="none")
+
+        L_rec = torch.sum(L_rec.reshape(L_rec.shape[0],-1), dim=1)
+        L_reg = torch.sum(KLD(mu, log_std), dim=1)
+        bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
+
+       
+        return torch.mean(L_rec), torch.mean(L_reg), bpd
 
     @torch.no_grad()
     def sample(self, batch_size):
@@ -141,11 +142,29 @@ def test_vae(model, data_loader):
         average_rec_loss - Average reconstruction loss
         average_reg_loss - Average regularization loss
     """
+    model.eval()
 
-    average_bpd = None
-    average_rec_loss = None
-    average_reg_loss = None
-    raise NotImplementedError
+    rec_losses = list()
+    reg_losses = list()
+    bpds = list()
+
+    model.train()
+
+    for step, (batch_inputs, _) in enumerate(data_loader):
+        batch_inputs = batch_inputs.to(model.device)
+
+        model.zero_grad()
+
+        rec_loss, reg_loss, bpd = model(batch_inputs)
+
+        rec_losses.append(rec_loss.item())
+        reg_losses.append(reg_loss.item())
+        bpds.append(bpd.item())
+
+    average_bpd = sum(bpds)/len(bpds)
+    average_rec_loss = sum(rec_losses)/len(rec_losses)
+    average_reg_loss = sum(reg_losses)/len(reg_losses)  
+
     return average_bpd, average_rec_loss, average_reg_loss
 
 
@@ -162,10 +181,31 @@ def train_vae(model, train_loader, optimizer):
         average_reg_loss - Average regularization loss
     """
 
-    average_bpd = None
-    average_rec_loss = None
-    average_reg_loss = None
-    raise NotImplementedError
+    rec_losses = list()
+    reg_losses = list()
+    bpds = list()
+
+    model.train()
+
+    for step, (batch_inputs, _) in enumerate(train_loader):
+        batch_inputs = batch_inputs.to(model.device)
+
+        model.zero_grad()
+
+        rec_loss, reg_loss, bpd = model(batch_inputs)
+
+        rec_losses.append(rec_loss.item())
+        reg_losses.append(reg_loss.item())
+        bpds.append(bpd.item())
+
+        bpd.backward()
+
+        optimizer.step()
+
+    average_bpd = sum(bpds)/len(bpds)
+    average_rec_loss = sum(rec_losses)/len(rec_losses)
+    average_reg_loss = sum(reg_losses)/len(reg_losses)  
+
     return average_bpd, average_rec_loss, average_reg_loss
 
 
@@ -223,12 +263,13 @@ def main(args):
     epoch_iterator = (trange(1, args.epochs + 1, desc=f"{args.model} VAE")
                       if args.progress_bar else range(1, args.epochs + 1))
     for epoch in epoch_iterator:
+        print("Epoch", epoch)
         # Training epoch
         train_iterator = (tqdm(train_loader, desc="Training", leave=False)
                           if args.progress_bar else train_loader)
         epoch_train_bpd, train_rec_loss, train_reg_loss = train_vae(
             model, train_iterator, optimizer)
-
+        print(epoch_train_bpd, train_rec_loss, train_reg_loss)
         # Validation epoch
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)

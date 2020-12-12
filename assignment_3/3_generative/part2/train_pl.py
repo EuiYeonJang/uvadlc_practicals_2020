@@ -53,6 +53,9 @@ class GAN(pl.LightningModule):
         self.discriminator = DiscriminatorMLP(hidden_dims=hidden_dims_disc,
                                                  dp_rate=dp_rate_disc)
 
+        # NOTE Alex
+        self.loss_module = nn.BCELoss()                                                 
+
     @torch.no_grad()
     def sample(self, batch_size):
         """
@@ -63,8 +66,9 @@ class GAN(pl.LightningModule):
         Outputs:
             x - Generated images of shape [B,C,H,W]
         """
-        x = None
-        raise NotImplementedError
+        # NOTE Alex
+        z = torch.normal(0., 1., size=(batch_size, self.hparams.z_dim))
+        x = self.generator(z)
         return x
 
     @torch.no_grad()
@@ -90,9 +94,12 @@ class GAN(pl.LightningModule):
         # Create optimizer for both generator and discriminator.
         # You can use the Adam optimizer for both models.
         # It is recommended to reduce the momentum (beta1) to e.g. 0.5
-        optimizer_gen = None
-        optimizer_disc = None
-        raise NotImplementedError
+        # NOTE Alex
+        optimizer_gen = torch.optim.AdamW(self.generator.parameters(), \
+            lr=self.hparams.lr, betas=[0.5, 0.999])
+        optimizer_disc = torch.optim.AdamW(self.discriminator.parameters(), \
+            lr=self.hparams.lr, betas=[0.5, 0.999])
+ 
         return [optimizer_gen, optimizer_disc], []
 
     def training_step(self, batch, batch_idx, optimizer_idx):
@@ -136,8 +143,8 @@ class GAN(pl.LightningModule):
         Outputs:
             loss - The loss for the generator to optimize
         """
-
-        loss = None
+        label = torch.full((x_real.shape[0],), 1., dtype=torch.float, device=self.generator.device)
+        loss = self.loss_module(x_real, )
         self.log("generator/loss", loss)
         raise NotImplementedError
 
