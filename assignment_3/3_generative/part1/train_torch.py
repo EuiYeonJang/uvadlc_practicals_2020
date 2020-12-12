@@ -125,10 +125,9 @@ def sample_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use the torchvision function "save_image" to save an image grid to disk
 
     # NOTE Alex
-    # imglist, means = model.sample(batch_size)
-    # grid = make_grid(imglist)
-    # save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
-    return
+    imglist, means = model.sample(batch_size)
+    grid = make_grid(imglist)
+    save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
 @torch.no_grad()
@@ -275,7 +274,7 @@ def main(args):
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)
         epoch_val_bpd, val_rec_loss, val_reg_loss = test_vae(model, val_iterator)
-        print(epoch_val_bpd, val_rec_loss, val_reg_loss)
+        print(f"BPD: {epoch_val_bpd:.2f}, Rec Loss: {val_rec_loss:.2f}, Reg Loss: {val_reg_loss:.2f}")
 
         # Logging to TensorBoard
         summary_writer.add_scalars(
