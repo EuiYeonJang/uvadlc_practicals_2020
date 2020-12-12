@@ -269,11 +269,11 @@ def main(args):
                           if args.progress_bar else train_loader)
         epoch_train_bpd, train_rec_loss, train_reg_loss = train_vae(
             model, train_iterator, optimizer)
-        print(epoch_train_bpd, train_rec_loss, train_reg_loss)
         # Validation epoch
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)
         epoch_val_bpd, val_rec_loss, val_reg_loss = test_vae(model, val_iterator)
+        print(epoch_val_bpd, val_rec_loss, val_reg_loss)
 
         # Logging to TensorBoard
         summary_writer.add_scalars(
