@@ -125,9 +125,10 @@ def sample_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use the torchvision function "save_image" to save an image grid to disk
 
     # NOTE Alex
-    imglist, means = model.sample(batch_size)
-    grid = make_grid(imglist)
-    save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
+    # imglist, means = model.sample(batch_size)
+    # grid = make_grid(imglist)
+    # save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
+    return
 
 
 @torch.no_grad()
@@ -247,7 +248,8 @@ def main(args):
                 num_filters=args.num_filters,
                 z_dim=args.z_dim,
                 lr=args.lr)
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    # device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = "cpu" # TODO
     model = model.to(device)
 
     # Create optimizer
@@ -263,7 +265,6 @@ def main(args):
     epoch_iterator = (trange(1, args.epochs + 1, desc=f"{args.model} VAE")
                       if args.progress_bar else range(1, args.epochs + 1))
     for epoch in epoch_iterator:
-        print("Epoch", epoch)
         # Training epoch
         train_iterator = (tqdm(train_loader, desc="Training", leave=False)
                           if args.progress_bar else train_loader)
@@ -273,7 +274,6 @@ def main(args):
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)
         epoch_val_bpd, val_rec_loss, val_reg_loss = test_vae(model, val_iterator)
-        print(epoch_val_bpd, val_rec_loss, val_reg_loss)
 
         # Logging to TensorBoard
         summary_writer.add_scalars(
