@@ -74,7 +74,7 @@ class VAE(nn.Module):
         mu, log_std = self.encoder(imgs)
         z = sample_reparameterize(mu, log_std)
         rec = torch.sigmoid(self.decoder(z))
-        L_rec = F.binary_cross_entropy_with_logits(rec, imgs, reduction="none")
+        L_rec = F.binary_cross_entropy(rec, imgs, reduction="none")
 
         L_rec = torch.sum(L_rec.reshape(L_rec.shape[0],-1), dim=1)
         L_reg = torch.sum(KLD(mu, log_std), dim=1)
@@ -247,8 +247,7 @@ def main(args):
                 num_filters=args.num_filters,
                 z_dim=args.z_dim,
                 lr=args.lr)
-    # device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    device = "cpu" # TODO
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
     model = model.to(device)
 
     # Create optimizer
