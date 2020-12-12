@@ -71,10 +71,15 @@ class VAE(nn.Module):
 
         # Hint: implement the empty functions in utils.py
 
-        L_rec = None
-        L_reg = None
-        bpd = None
-        raise NotImplementedError
+        mu, log_std = self.encoder(imgs)
+        z = sample_reparameterize(mu, log_std)
+        print(z.shape)
+        rec = self.decoder(z)
+        p = imgs * torch.log(rec) * (1- imgs) * torch.log(1 - rec)
+        print(p.shape)
+        L_rec = - torch.sum(z*p)
+        L_reg = KLD(mu, log_std)
+        bpd = elbo_to_bpd(L_rec + L_reg)
         return L_rec, L_reg, bpd
 
     @torch.no_grad()
@@ -89,9 +94,9 @@ class VAE(nn.Module):
                      between 0 and 1 from which we obtain "x_samples"
         """
 
-        x_mean = None
-        x_samples = None
-        raise NotImplementedError
+        z = torch.randn(size=(batch_size, self.z_dim))
+        x_mean = torch.sigmoid(self.decoder(z))
+        x_samples = (x_mean > 0.5).float() 
         return x_samples, x_mean
 
     @property
@@ -118,7 +123,10 @@ def sample_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use the torchvision function "make_grid" to create a grid of multiple images
     # - Use the torchvision function "save_image" to save an image grid to disk
 
-    raise NotImplementedError
+    # NOTE Alex
+    imglist, means = model.sample(batch_size)
+    grid = make_grid(imglist)
+    save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
 @torch.no_grad()

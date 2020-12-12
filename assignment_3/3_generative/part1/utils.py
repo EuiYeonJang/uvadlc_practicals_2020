@@ -32,7 +32,7 @@ def sample_reparameterize(mean, std):
             The tensor should have the same shape as the mean and std input tensors.
     """
     # TODO log_std or just std?
-    epsilon = torch.normal(mean=0., std=1., size=mean.shape)
+    epsilon = torch.randn(size=mean.shape)
     z = mean + epsilon * std
 
     return z

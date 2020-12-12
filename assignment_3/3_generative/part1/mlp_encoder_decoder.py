@@ -65,8 +65,6 @@ class MLPEncoder(nn.Module):
         """
 
         # Remark: Make sure to understand why we are predicting the log_std and not std
-        mean = None
-        log_std = None
         
         # NOTE Alex
         B, _, _, _ = x.shape
