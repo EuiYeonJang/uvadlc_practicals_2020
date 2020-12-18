@@ -80,7 +80,7 @@ class VAE(nn.Module):
         L_rec = torch.sum(L_rec, dim=-1)
         L_rec = L_rec.squeeze()
         L_reg = KLD(mu, log_std)
-        bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
+        bpd = elbo_to_bpd(L_rec - L_reg, imgs.shape)
 
        
         return torch.mean(L_rec), torch.mean(L_reg), bpd
@@ -154,8 +154,6 @@ def test_vae(model, data_loader):
 
     for step, (batch_inputs, _) in enumerate(data_loader):
         batch_inputs = batch_inputs.to(model.device)
-
-        model.zero_grad()
 
         rec_loss, reg_loss, bpd = model(batch_inputs)
 
