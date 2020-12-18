@@ -74,13 +74,13 @@ class VAE(nn.Module):
         mu, log_std = self.encoder(imgs)
         z = sample_reparameterize(mu, log_std)
         rec = torch.sigmoid(self.decoder(z))
-        L_rec = F.binary_cross_entropy(rec, imgs, reduction="none")
+        L_rec = F.binary_cross_entropy_with_logits(rec, imgs, reduction="none")
 
         L_rec = torch.sum(L_rec, dim=-1)
         L_rec = torch.sum(L_rec, dim=-1)
         L_rec = L_rec.squeeze()
         L_reg = KLD(mu, log_std)
-        bpd = elbo_to_bpd(L_rec - L_reg, imgs.shape)
+        bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
 
        
         return torch.mean(L_rec), torch.mean(L_reg), bpd

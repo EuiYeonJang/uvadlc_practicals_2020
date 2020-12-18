@@ -49,9 +49,9 @@ def KLD(mean, log_std):
         KLD - Tensor with one less dimension than mean and log_std (summed over last dimension).
               The values represent the Kullback-Leibler divergence to unit Gaussians.
     """
-    # TODO what to do with log_std?
     log_var = 2 * log_std
-    var = log_var.exp()
+    std = log_std.exp()
+    var = std**2
     kld = 0.5 * (var + (mean ** 2) - 1 - log_var)
     KLD = torch.sum(kld, dim=-1)
     return KLD
@@ -69,7 +69,7 @@ def elbo_to_bpd(elbo, img_shape):
     # NOTE Alex
     img_shape = [img_shape[1], img_shape[2], img_shape[3]]
     
-    sum_neg_log = -torch.mean(elbo)
+    sum_neg_log = torch.mean(elbo)
     base = torch.log2(torch.exp(torch.ones(1,))).to(elbo.device)
     inv_prod =  torch.tensor(1.) / torch.prod(torch.tensor(img_shape))
     bpd = sum_neg_log * base * inv_prod.to(elbo.device)
