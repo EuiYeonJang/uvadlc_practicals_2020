@@ -77,7 +77,7 @@ class VAE(nn.Module):
         L_rec = F.binary_cross_entropy(rec, imgs, reduction="none")
 
         L_rec = torch.sum(L_rec.reshape(L_rec.shape[0],-1), dim=1)
-        L_reg = torch.sum(KLD(mu, log_std), dim=1)
+        L_reg = KLD(mu, log_std)
         bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
 
        
@@ -341,7 +341,7 @@ if __name__ == '__main__':
                         help='Max number of epochs')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--num_workers', default=4, type=int,
+    parser.add_argument('--num_workers', default=0, type=int,
                         help='Number of workers to use in the data loaders. To have a truly deterministic run, this has to be 0. ' + \
                              'For your assignment report, you can use multiple workers (e.g. 4) and do not have to set it to 0.')
     parser.add_argument('--log_dir', default='VAE_logs', type=str,

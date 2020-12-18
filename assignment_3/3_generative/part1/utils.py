@@ -33,7 +33,7 @@ def sample_reparameterize(mean, std):
     """
     # TODO log_std or just std?
     epsilon = torch.randn(size=mean.shape).to(mean.device)
-    z = mean + epsilon * std
+    z = mean + epsilon * std.exp_()
 
     return z
 
@@ -52,8 +52,8 @@ def KLD(mean, log_std):
     # TODO what to do with log_std?
     log_var = 2 * log_std
     var = log_var.exp()
-    KLD = 0.5 * (var + (mean ** 2) - 1 - log_var)
-    
+    kld = 0.5 * (var + (mean ** 2) - 1 - log_var)
+    KLD = torch.sum(kld, dim=-1)
     return KLD
 
 
