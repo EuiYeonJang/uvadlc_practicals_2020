@@ -68,11 +68,11 @@ def elbo_to_bpd(elbo, img_shape):
         bpd - The negative log likelihood in bits per dimension for the given image.
     """
 
-    nll = -torch.mean(elbo)
+    nll = torch.mean(elbo)
     prod_dim = img_shape[1] * img_shape[2] * img_shape[3]
     change_base = np.log2(np.e)
 
-    bpd = (nll * change_base) / prod_dim.to(elbo.device)
+    bpd = (nll * change_base) / prod_dim
     
     return bpd
 

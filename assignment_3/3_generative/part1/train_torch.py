@@ -70,20 +70,16 @@ class VAE(nn.Module):
         """
 
         # Hint: implement the empty functions in utils.py
+        mean, log_std = self.encoder(imgs)
+        z = sample_reparameterize(mean, log_std.exp())
+        recon = torch.sigmoid(self.decoder(z))
 
-        mu, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mu, log_std)
-        rec = torch.sigmoid(self.decoder(z))
-        L_rec = F.binary_cross_entropy_with_logits(rec, imgs, reduction="none")
-
-        L_rec = torch.sum(L_rec, dim=-1)
-        L_rec = torch.sum(L_rec, dim=-1)
-        L_rec = L_rec.squeeze()
-        L_reg = KLD(mu, log_std)
+        L_rec = F.binary_cross_entropy(recon, imgs, reduction="none")
+        L_rec = torch.sum(L_rec.reshape((imgs.shape[0], -1)), dim=-1)
+        L_reg = KLD(mean, log_std)
         bpd = elbo_to_bpd(L_rec + L_reg, imgs.shape)
 
-       
-        return torch.mean(L_rec), torch.mean(L_reg), bpd
+        return torch.sum(L_rec), torch.sum(L_reg), bpd
 
     @torch.no_grad()
     def sample(self, batch_size):
@@ -96,10 +92,11 @@ class VAE(nn.Module):
             x_mean - The sigmoid output of the decoder with continuous values
                      between 0 and 1 from which we obtain "x_samples"
         """
-
+        
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.decoder.device)
         x_mean = torch.sigmoid(self.decoder(z))
-        x_samples = (x_mean > 0.5).float() 
+        x_samples = (x_mean > 0.5).float()
+        
         return x_samples, x_mean
 
     @property
@@ -126,9 +123,8 @@ def sample_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use the torchvision function "make_grid" to create a grid of multiple images
     # - Use the torchvision function "save_image" to save an image grid to disk
 
-    # NOTE Alex
-    imglist, means = model.sample(batch_size)
-    grid = make_grid(imglist)
+    samples, means = model.sample(batch_size)
+    grid = make_grid(samples)
     save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
@@ -146,25 +142,24 @@ def test_vae(model, data_loader):
     """
     model.eval()
 
-    rec_losses = list()
-    reg_losses = list()
-    bpds = list()
+    list_bpd = list()
+    list_rec = list()
+    list_reg = list()
 
-    model.train()
 
-    for step, (batch_inputs, _) in enumerate(data_loader):
-        batch_inputs = batch_inputs.to(model.device)
+    for inputs, _ in data_loader:
+        inputs = inputs.to(model.device)
 
-        rec_loss, reg_loss, bpd = model(batch_inputs)
+        rec_loss, reg_loss, bpd = model(inputs)
 
-        rec_losses.append(rec_loss.item())
-        reg_losses.append(reg_loss.item())
-        bpds.append(bpd.item())
+        list_rec.append(rec_loss.item())
+        list_reg.append(reg_loss.item())
+        list_bpd.append(bpd.item())
 
-    average_bpd = sum(bpds)/len(bpds)
-    average_rec_loss = sum(rec_losses)/len(rec_losses)
-    average_reg_loss = sum(reg_losses)/len(reg_losses)  
-
+    average_bpd = sum(list_bpd)/len(list_bpd)
+    average_rec_loss = sum(list_rec)/len(list_rec)
+    average_reg_loss = sum(list_reg)/len(list_reg)
+    
     return average_bpd, average_rec_loss, average_reg_loss
 
 
@@ -180,31 +175,33 @@ def train_vae(model, train_loader, optimizer):
         average_rec_loss - Average reconstruction loss
         average_reg_loss - Average regularization loss
     """
-
-    rec_losses = list()
-    reg_losses = list()
-    bpds = list()
-
     model.train()
 
-    for step, (batch_inputs, _) in enumerate(train_loader):
-        batch_inputs = batch_inputs.to(model.device)
+    list_bpd = list()
+    list_rec = list()
+    list_reg = list()
 
-        model.zero_grad()
 
-        rec_loss, reg_loss, bpd = model(batch_inputs)
+    for inputs, _ in train_loader:
 
-        rec_losses.append(rec_loss.item())
-        reg_losses.append(reg_loss.item())
-        bpds.append(bpd.item())
+        optimizer.zero_grad()
+
+        inputs = inputs.to(model.device)
+
+        rec_loss, reg_loss, bpd = model(inputs)
+
+        list_rec.append(rec_loss.item())
+        list_reg.append(reg_loss.item())
+        list_bpd.append(bpd.item())
 
         bpd.backward()
 
         optimizer.step()
 
-    average_bpd = sum(bpds)/len(bpds)
-    average_rec_loss = sum(rec_losses)/len(rec_losses)
-    average_reg_loss = sum(reg_losses)/len(reg_losses)  
+
+    average_bpd = sum(list_bpd)/len(list_bpd)
+    average_rec_loss = sum(list_rec)/len(list_rec)
+    average_reg_loss = sum(list_reg)/len(list_reg)
 
     return average_bpd, average_rec_loss, average_reg_loss
 
@@ -263,17 +260,17 @@ def main(args):
     epoch_iterator = (trange(1, args.epochs + 1, desc=f"{args.model} VAE")
                       if args.progress_bar else range(1, args.epochs + 1))
     for epoch in epoch_iterator:
-        print("epoch", epoch)
         # Training epoch
         train_iterator = (tqdm(train_loader, desc="Training", leave=False)
                           if args.progress_bar else train_loader)
         epoch_train_bpd, train_rec_loss, train_reg_loss = train_vae(
             model, train_iterator, optimizer)
+
         # Validation epoch
         val_iterator = (tqdm(val_loader, desc="Testing", leave=False)
                         if args.progress_bar else val_loader)
         epoch_val_bpd, val_rec_loss, val_reg_loss = test_vae(model, val_iterator)
-        print(f"BPD: {epoch_val_bpd:.2f}, Rec Loss: {val_rec_loss:.2f}, Reg Loss: {val_reg_loss:.2f}")
+        print(f":: Epoch{epoch} :: BPD: {epoch_val_bpd:.2f}, Rec: {val_rec_loss:.2f}, Reg: {val_reg_loss:.2f}")
 
         # Logging to TensorBoard
         summary_writer.add_scalars(
@@ -303,7 +300,7 @@ def main(args):
                    if args.progress_bar else test_loader)
     test_bpd, _, _ = test_vae(model, test_loader)
     print(f"Test BPD: {test_bpd}")
-    summary_writer.add_scalars("BPD", {"test": test_bpd}, args.epochs - 1)
+    summary_writer.add_scalars("BPD", {"test": test_bpd}, best_epoch_idx)
 
     # Manifold generation
     if args.z_dim == 2:
@@ -341,7 +338,7 @@ if __name__ == '__main__':
                         help='Max number of epochs')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--num_workers', default=0, type=int,
+    parser.add_argument('--num_workers', default=4, type=int,
                         help='Number of workers to use in the data loaders. To have a truly deterministic run, this has to be 0. ' + \
                              'For your assignment report, you can use multiple workers (e.g. 4) and do not have to set it to 0.')
     parser.add_argument('--log_dir', default='VAE_logs', type=str,
