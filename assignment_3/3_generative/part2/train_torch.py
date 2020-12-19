@@ -256,7 +256,7 @@ def train_gan(model, train_loader,
 
         optimizer_disc.step()
 
-    print(f"GEN: {loss_gen} DISC: {loss_disc}")
+    print(f"GEN: {loss_gen:.2f} DISC: {loss_disc:.2f}")
 
 
 def seed_everything(seed):
@@ -341,7 +341,6 @@ def main(args):
             torch.save(model.state_dict(),
                        os.path.join(checkpoint_dir, "model_checkpoint.pt"))
 
-        break
 
 
 if __name__ == '__main__':
