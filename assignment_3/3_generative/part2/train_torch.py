@@ -110,14 +110,14 @@ class GAN(nn.Module):
                            to our TensorBoard logger
         """
         batch_size = x_real.shape[0]
-        y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
+        y = torch.ones(size=(batch_size,)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
         x_gen = self.generator(z)
-        preds = torch.sigmoid(self.discriminator(x_gen)).squeeze()
+        preds = 1 - torch.sigmoid(self.discriminator(x_gen)).squeeze()
 
-        loss = F.binary_cross_entropy(preds, y_gen)
+        loss = -F.binary_cross_entropy(preds, y)
         logging_dict = {"loss": loss}
 
         return loss, logging_dict
