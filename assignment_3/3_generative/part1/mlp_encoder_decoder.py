@@ -36,23 +36,24 @@ class MLPEncoder(nn.Module):
         # For an intial architecture, you can use a sequence of linear layers and ReLU activations.
         # Feel free to experiment with the architecture yourself, but the one specified here is 
         # sufficient for the assignment.
-        # NOTE Alex
-
         self.z_dim = z_dim
-        combined_z_dim = 2*z_dim
+        combined_z_dim = 2 * z_dim
+
+        act_func = nn.ReLU()
 
         if len(hidden_dims) == 0:
-            list_modules = [nn.Linear(input_dim, combined_z_dim)]
-
+            modules = [ nn.Linear(input_dim, combined_z_dim) ]
+        
         else:
-            list_modules = [nn.Linear(input_dim, hidden_dims[0]), nn.ReLU()]
-
-            for i in range(1, len(hidden_dims)):
-                list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), nn.ReLU()])
+            modules = [ nn.Linear(input_dim, hidden_dims[0]), act_func ]
+        
+            for i in range(len(hidden_dims) - 1):
+                modules.extend([ nn.Linear(hidden_dims[i], hidden_dims[i + 1]), act_func ])
             
-            list_modules.extend([nn.Linear(hidden_dims[-1], combined_z_dim)])
+            modules.append( nn.Linear(hidden_dims[-1], combined_z_dim) )
 
-        self.net = nn.Sequential(*list_modules)
+        self.net = nn.Sequential(*modules)
+
 
     def forward(self, x):
         """
@@ -65,14 +66,14 @@ class MLPEncoder(nn.Module):
         """
 
         # Remark: Make sure to understand why we are predicting the log_std and not std
-        
-        # NOTE Alex
         B, _, _, _ = x.shape
         x = x.reshape((B, -1))
-        params = self.net(x)
         
+        params = self.net(x)
+
         mean = params[:, :self.z_dim]
         log_std = params[:, self.z_dim:]
+        
         return mean, log_std
 
 
@@ -95,24 +96,22 @@ class MLPDecoder(nn.Module):
         # Feel free to experiment with the architecture yourself, but the one specified here is 
         # sufficient for the assignment.
 
-        # NOTE Alex
-
         output_dim = output_shape[0] * output_shape[1] * output_shape[2]
-        
+
+        act_func = nn.ReLU()
+
         if len(hidden_dims) == 0:
-            # TODO Alex last softmax layer not included because of CrossEntropyLoss
-            list_modules = [nn.Linear(z_dim, output_dim)]
-
+            modules = [ nn.Linear(z_dim, output_dim) ]
+        
         else:
-            list_modules = [nn.Linear(z_dim, hidden_dims[0]), nn.ReLU()]
-
-            for i in range(1, len(hidden_dims)):
-                list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), nn.ReLU()])
+            modules = [ nn.Linear(z_dim, hidden_dims[0]), act_func ]
+        
+            for i in range(len(hidden_dims) - 1):
+                modules.extend([ nn.Linear(hidden_dims[i], hidden_dims[i + 1]), act_func ])
             
-            # TODO Alex last softmax layer not included because of CrossEntropyLoss
-            list_modules.extend([nn.Linear(hidden_dims[-1], output_dim)])
+            modules.append( nn.Linear(hidden_dims[-1], output_dim) )
 
-        self.net = nn.Sequential(*list_modules)
+        self.net = nn.Sequential(*modules)
 
     def forward(self, z):
         """
@@ -123,9 +122,14 @@ class MLPDecoder(nn.Module):
                 This should be a logit output *without* a sigmoid applied on it.
                 Shape: [B,output_shape[0],output_shape[1],output_shape[2]]
         """
-        # NOTE Alex
+
+        
         B, _ = z.shape
-        x = self.net(z).reshape((B, self.output_shape[0], self.output_shape[1], self.output_shape[2]))
+        batch_output_shape = [B] + self.output_shape
+
+        x = self.net(z)
+        x = x.reshape(batch_output_shape)
+        
         return x
 
     @property

@@ -31,10 +31,9 @@ def sample_reparameterize(mean, std):
         z - A sample of the distributions, with gradient support for both mean and std. 
             The tensor should have the same shape as the mean and std input tensors.
     """
-    # TODO log_std or just std?
+    
     epsilon = torch.randn(size=mean.shape).to(mean.device)
-    z = mean + epsilon * std.exp_()
-
+    z = mean + epsilon * std
     return z
 
 
@@ -51,9 +50,11 @@ def KLD(mean, log_std):
     """
     log_var = 2 * log_std
     std = log_std.exp()
-    var = std**2
-    kld = 0.5 * (var + (mean ** 2) - 1 - log_var)
-    KLD = torch.sum(kld, dim=-1)
+    var = std ** 2
+
+    KLD = 0.5 * ( var + (mean ** 2) - 1 - log_var )
+    KLD = torch.sum(KLD, dim=-1)
+
     return KLD
 
 
@@ -62,18 +63,17 @@ def elbo_to_bpd(elbo, img_shape):
     Converts the summed negative log likelihood given by the ELBO into the bits per dimension score.
     Inputs:
         elbo - Tensor of shape [batch_size]
-        img_shape - Shape of the input images.
+        img_shape - Shape of the input images, representing [batch, channels, height, width]
     Outputs:
         bpd - The negative log likelihood in bits per dimension for the given image.
     """
-    # NOTE Alex
-    img_shape = [img_shape[1], img_shape[2], img_shape[3]]
-    
-    sum_neg_log = torch.mean(elbo)
-    base = torch.log2(torch.exp(torch.ones(1,))).to(elbo.device)
-    inv_prod =  torch.tensor(1.) / torch.prod(torch.tensor(img_shape))
-    bpd = sum_neg_log * base * inv_prod.to(elbo.device)
 
+    nll = -torch.mean(elbo)
+    prod_dim = img_shape[1] * img_shape[2] * img_shape[3]
+    change_base = np.log2(np.e)
+
+    bpd = (nll * change_base) / prod_dim.to(elbo.device)
+    
     return bpd
 
 
