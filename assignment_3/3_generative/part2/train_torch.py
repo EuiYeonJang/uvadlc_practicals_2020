@@ -110,12 +110,12 @@ class GAN(nn.Module):
                            to our TensorBoard logger
         """
         batch_size = x_real.shape[0]
-        y_gen = torch.zeros(size=batch_size)
+        y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
         x_gen = self.generator(z)
-        preds = torch.sigmoid(self.discriminator(x_gen))
+        preds = torch.sigmoid(self.discriminator(x_gen)).squeeze()
 
         loss = F.binary_cross_entropy(preds, y_gen)
         logging_dict = {"loss": loss}
@@ -143,17 +143,18 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        y_gen = torch.zeros(size=batch_size)
-        y_real = torch.ones(size=batch_size)
-        y = torch.cat(y_gen, y_real) 
+        y = torch.ones(size=(batch_size,)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
         x_gen = self.generator(z)
-        x = torch.cat(x_gen, x_real)
+        x = torch.cat((x_gen, x_real))
 
-        preds = torch.sigmoid(self.discriminator(x))
+        preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
-        loss = F.binary_cross_entropy(preds, y)
+        fst_term = preds[:batch_size]
+        snd_term = 1 - preds[batch_size:]
+
+        loss = F.binary_cross_entropy(fst_term, y) + F.binary_cross_entropy(snd_term, y)
         logging_dict = {"loss": loss}
 
         return loss, logging_dict
@@ -242,14 +243,14 @@ def train_gan(model, train_loader,
         optimizer_disc.zero_grad()
 
         # Generator update
-        loss_gen, dict_gen = model.generator_step()
+        loss_gen, dict_gen = model.generator_step(imgs)
         logger_gen.add_values(dict_gen)
         loss_gen.backward()
 
         optimizer_gen.step()
 
         # Discriminator update
-        loss_disc, dict_disc = model.discriminator_step()
+        loss_disc, dict_disc = model.discriminator_step(imgs)
         logger_gen.add_values(dict_disc)
         loss_disc.backward()
 
@@ -339,6 +340,8 @@ def main(args):
         if (epoch + 1) % 10 == 0:
             torch.save(model.state_dict(),
                        os.path.join(checkpoint_dir, "model_checkpoint.pt"))
+
+        break
 
 
 if __name__ == '__main__':
