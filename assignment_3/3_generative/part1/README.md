@@ -21,7 +21,7 @@ Your task is to fill in the missing code pieces (indicated by `NotImplementedErr
   * A `visualize_manifold` function that should implement the visualization of the manifold in latent space. See question 1.11 for details.
 * The training files `train_torch.py`/`train_pl.py` are build up in a similar manner. In both, you need to implement:
   * A `forward` function which returns the reconstruction and regularization loss, as well as the bits per dimension metric for a single batch.
-  * A `sample` function that creates new images with the Decoder. You should log/save those in the function `sample_and_save`/callback `GenerateCallback`
+  * A `sample` function that creates new images with the Decoder. You shoud log/save those in the function `sample_and_save`/callback `GenerateCallback`
   * Additionally in the `train_torch.py` file, you need to implement a training and test loop for a single epoch in `train_vae` and `test_vae`. PyTorch Lightning automatically does this using internal code.
   
 Default hyperparameters are provided in the `ArgumentParser` object of the respective training functions. Feel free to play around with those to familiarize yourself with the effect of different hyperparameters. Nevertheless, your model should be able to generate decent images with the default hyperparameters.
