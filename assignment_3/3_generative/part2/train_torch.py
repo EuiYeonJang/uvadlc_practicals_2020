@@ -69,8 +69,9 @@ class GAN(nn.Module):
         Outputs:
             x - Generated images of shape [B,C,H,W]
         """
-        x = None
-        raise NotImplementedError
+
+        z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
+        x = torch.sigmoid(self.generator(z))
         return x
 
     @torch.no_grad()
@@ -88,6 +89,7 @@ class GAN(nn.Module):
             x - Generated images of shape [B,interpolation_steps+2,C,H,W]
         """
 
+        z_pairs = torch.randn(size=(2, batch_size, self.z_dim))
         x = None
         raise NotImplementedError
         return x
@@ -107,10 +109,16 @@ class GAN(nn.Module):
             logging_dict - Dictionary of string to Tensor that should be added
                            to our TensorBoard logger
         """
+        batch_size = x_real.shape[0]
+        y_gen = torch.zeros(size=batch_size)
+        
+        z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
-        loss = None
+        x_gen = self.generator(z)
+        preds = torch.sigmoid(self.discriminator(x_gen))
+
+        loss = F.binary_cross_entropy(preds, y_gen)
         logging_dict = {"loss": loss}
-        raise NotImplementedError
 
         return loss, logging_dict
 
@@ -133,9 +141,20 @@ class GAN(nn.Module):
 
         # Remark: there are more metrics that you can add. 
         # For instance, how about the accuracy of the discriminator?
-        loss = None
+        batch_size = x_real.shape[0]
+        
+        y_gen = torch.zeros(size=batch_size)
+        y_real = torch.ones(size=batch_size)
+        y = torch.cat(y_gen, y_real) 
+        
+        z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
+        x_gen = self.generator(z)
+        x = torch.cat(x_gen, x_real)
+
+        preds = torch.sigmoid(self.discriminator(x))
+
+        loss = F.binary_cross_entropy(preds, y)
         logging_dict = {"loss": loss}
-        raise NotImplementedError
 
         return loss, logging_dict
 
@@ -164,7 +183,9 @@ def generate_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use torchvision function "make_grid" to create a grid of multiple images
     # - Use torchvision function "save_image" to save an image grid to disk
 
-    raise NotImplementedError
+    samples = model.sample(batch_size)
+    grid = make_grid(samples)
+    save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
 def interpolate_and_save(model, epoch, summary_writer, batch_size=64,
@@ -217,11 +238,24 @@ def train_gan(model, train_loader,
         # (both loggers should get different dictionaries, the outputs 
         #  of the respective step functions)
 
+        optimizer_gen.zero_grad()
+        optimizer_disc.zero_grad()
+
         # Generator update
-        raise NotImplementedError
+        loss_gen, dict_gen = model.generator_step()
+        logger_gen.add_values(dict_gen)
+        loss_gen.backward()
+
+        optimizer_gen.step()
 
         # Discriminator update
-        raise NotImplementedError
+        loss_disc, dict_disc = model.discriminator_step()
+        logger_gen.add_values(dict_disc)
+        loss_disc.backward()
+
+        optimizer_disc.step()
+
+    print(f"GEN: {loss_gen} DISC: {loss_disc}")
 
 
 def seed_everything(seed):
@@ -267,9 +301,11 @@ def main(args):
     # Create two separate optimizers for generator and discriminator
     # You can use the Adam optimizer for both models.
     # It is recommended to reduce the momentum (beta1) to e.g. 0.5
-    optimizer_gen = None
-    optimizer_disc = None
-    raise NotImplementedError
+    optimizer_gen = torch.optim.AdamW(model.generator.parameters(), \
+            lr=args.lr, betas=[0.5, 0.999])
+    optimizer_disc = torch.optim.AdamW(model.discriminator.parameters(), \
+            lr=args.lr, betas=[0.5, 0.999])
+ 
 
     # TensorBoard logger
     # See utils.py for details on "TensorBoardLogger" class

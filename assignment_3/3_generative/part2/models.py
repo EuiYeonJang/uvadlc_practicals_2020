@@ -123,8 +123,7 @@ class DiscriminatorMLP(nn.Module):
                     Shape: [B,1]
         """
         
-        # NOTE Alex
         x = x.reshape((x.shape[0], -1))
-        preds = self.net(x)
-        
-        return preds
+        out = self.net(x)
+
+        return out
