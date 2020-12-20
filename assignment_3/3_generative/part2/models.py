@@ -47,11 +47,11 @@ class GeneratorMLP(nn.Module):
             list_modules = [nn.Linear(z_dim, flatten_output_shape)]
 
         else:
-            list_modules = [nn.Linear(z_dim, hidden_dims[0]), nn.LeakyReLU(negative_slope =0.2)]
+            list_modules = [nn.Linear(z_dim, hidden_dims[0]), nn.LeakyReLU(negative_slope=0.2)]
 
             for i in range(1, len(hidden_dims)):
                 list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), \
-                    nn.Dropout(dp_rate),nn.LeakyReLU(negative_slope =0.2)])
+                    nn.Dropout(dp_rate), nn.LeakyReLU(negative_slope =0.2)])
             
             # TODO hmmm?
             list_modules.extend([nn.Linear(hidden_dims[-1], flatten_output_shape), nn.Tanh()])
@@ -103,11 +103,11 @@ class DiscriminatorMLP(nn.Module):
             list_modules = [nn.Linear(input_dims, 1)]
 
         else:
-            list_modules = [nn.Linear(input_dims, hidden_dims[0]), nn.LeakyReLU(negative_slope =0.2)]
+            list_modules = [nn.Linear(input_dims, hidden_dims[0]), nn.LeakyReLU(negative_slope=0.2)]
 
             for i in range(1, len(hidden_dims)):
                 list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), \
-                    nn.Dropout(dp_rate),nn.LeakyReLU(negative_slope =0.2)])
+                    nn.Dropout(dp_rate), nn.LeakyReLU(negative_slope=0.2)])
             
             list_modules.extend([nn.Linear(hidden_dims[-1], 1)])
 
