@@ -115,8 +115,8 @@ class GAN(nn.Module):
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
-        x = self.generator(z)
-        preds = torch.sigmoid(self.discriminator(x)).squeeze()
+        x = torch.sigmoid(self.generator(z))
+        preds = self.discriminator(x).squeeze()
 
         loss = F.binary_cross_entropy(preds, y)
         logging_dict = {"loss": loss}
@@ -144,12 +144,12 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        y_real = torch.ones(size=(batch_size,)).to(self.discriminator.device)
-        y_gen = torch.zeros(size=(batch_size,)).to(self.discriminator.device)
-        y = torch.cat((y_real, y_gen))
+        y_real = torch.ones(size=(batch_size,))
+        y_gen = torch.zeros(size=(batch_size,))
+        y = torch.cat((y_real, y_gen)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
-        x_gen = self.generator(z)
+        x_gen = torch.sigmoid(self.generator(z))
         x = torch.cat((x_real, x_gen))
 
         preds = self.discriminator(x).squeeze()
