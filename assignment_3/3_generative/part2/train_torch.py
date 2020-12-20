@@ -115,7 +115,7 @@ class GAN(nn.Module):
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
-        x = torch.sigmoid(self.generator(z))
+        x = self.generator(z)
         preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
         loss = F.binary_cross_entropy(preds, y)
@@ -149,13 +149,13 @@ class GAN(nn.Module):
         y = torch.cat((y_real, y_gen)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
-        x_gen = torch.sigmoid(self.generator(z))
+        x_gen = self.generator(z)
         x = torch.cat((x_real, x_gen))
 
         preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
         loss = F.binary_cross_entropy(preds, y)
-        preds = torch.argmax(preds, dim=1)
+        preds = (preds > 0.5).float()
 
         accuracy = (y==preds).sum().item() / len(y)
 
@@ -189,7 +189,7 @@ def generate_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use torchvision function "save_image" to save an image grid to disk
 
     samples = model.sample(batch_size)
-    grid = make_grid(samples)
+    grid = make_grid(samples, normalize=True)
     save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
@@ -255,7 +255,7 @@ def train_gan(model, train_loader,
 
         # Discriminator update
         loss_disc, dict_disc = model.discriminator_step(imgs)
-        logger_disc.add_values(dict_disc)
+        # logger_disc.add_values(dict_disc)
         loss_disc.backward()
 
         optimizer_disc.step()
@@ -380,7 +380,7 @@ if __name__ == '__main__':
                         help='Number of epochs to train.')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--num_workers', default=4, type=int,
+    parser.add_argument('--num_workers', default=0, type=int,
                         help='Number of workers to use in the data loaders.' +
                              'To have a truly deterministic run, this has to be 0.')
     parser.add_argument('--log_dir', default='GAN_logs/', type=str,
