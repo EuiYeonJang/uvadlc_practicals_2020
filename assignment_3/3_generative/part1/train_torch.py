@@ -322,7 +322,7 @@ if __name__ == '__main__':
                         choices=['MLP', 'CNN'])
     parser.add_argument('--z_dim', default=20, type=int,
                         help='Dimensionality of latent space')
-    parser.add_argument('--hidden_dims', default=[512], type=int, nargs='+',
+    parser.add_argument('--hidden_dims', default=[512,128], type=int, nargs='+',
                         help='Hidden dimensionalities to use inside the network. To specify multiple, use " " to separate them. Example: "512 256"')
     parser.add_argument('--num_filters', default=32, type=int,
                         help='Number of channels/filters to use in the CNN encoder/decoder.')
@@ -334,7 +334,7 @@ if __name__ == '__main__':
                         help='Minibatch size')
 
     # Other hyperparameters
-    parser.add_argument('--epochs', default=80, type=int,
+    parser.add_argument('--epochs', default=120, type=int,
                         help='Max number of epochs')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
