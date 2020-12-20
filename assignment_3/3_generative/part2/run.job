@@ -21,4 +21,4 @@ module load Anaconda3/2018.12
 source activate dl2020
 
 # Run your code
-srun python -u train_torch.py
+srun python -u train_torch.py --epochs 50
