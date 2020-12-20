@@ -320,9 +320,9 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='MLP', type=str,
                         help='What model to use in the VAE',
                         choices=['MLP', 'CNN'])
-    parser.add_argument('--z_dim', default=10, type=int,
+    parser.add_argument('--z_dim', default=20, type=int,
                         help='Dimensionality of latent space')
-    parser.add_argument('--hidden_dims', default=[512,246,128], type=int, nargs='+',
+    parser.add_argument('--hidden_dims', default=[512], type=int, nargs='+',
                         help='Hidden dimensionalities to use inside the network. To specify multiple, use " " to separate them. Example: "512 256"')
     parser.add_argument('--num_filters', default=32, type=int,
                         help='Number of channels/filters to use in the CNN encoder/decoder.')
