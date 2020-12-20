@@ -111,7 +111,7 @@ class GAN(nn.Module):
         """
         batch_size = x_real.shape[0]
 
-        y = torch.ones(size=(batch_size,), device=self.generator.device)
+        y = torch.ones(size=(batch_size,)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
@@ -144,8 +144,8 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        y_real = torch.ones(size=(batch_size,), device=self.generator.device)
-        y_gen = torch.zeros(size=(batch_size,), device=self.generator.device)
+        y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
+        y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
         y = torch.cat((y_real, y_gen))
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
@@ -154,11 +154,10 @@ class GAN(nn.Module):
 
         preds = self.discriminator(x).squeeze()
 
-        fst_term = preds[:batch_size]
-        snd_term = preds[batch_size:]
-
         loss = F.binary_cross_entropy(preds, y)
-        logging_dict = {"loss": loss}
+        accuracy = (y==preds).sum().item() / len(y)
+
+        logging_dict = {"loss": loss, "acc": accuracy}
 
         return loss, logging_dict
 
@@ -254,7 +253,7 @@ def train_gan(model, train_loader,
 
         # Discriminator update
         loss_disc, dict_disc = model.discriminator_step(imgs)
-        logger_gen.add_values(dict_disc)
+        logger_disc.add_values(dict_disc)
         loss_disc.backward()
 
         optimizer_disc.step()
