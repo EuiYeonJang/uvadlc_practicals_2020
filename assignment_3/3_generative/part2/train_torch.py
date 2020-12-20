@@ -110,14 +110,15 @@ class GAN(nn.Module):
                            to our TensorBoard logger
         """
         batch_size = x_real.shape[0]
-        y = torch.ones(size=(batch_size,)).to(self.generator.device)
+
+        y = torch.zeros(size=(batch_size,), device=self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
-        x_gen = self.generator(z)
-        preds = 1 - torch.sigmoid(self.discriminator(x_gen)).squeeze()
+        x = self.generator(z)
+        preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
-        loss = -F.binary_cross_entropy(preds, y)
+        loss = F.binary_cross_entropy(preds, y)
         logging_dict = {"loss": loss}
 
         return loss, logging_dict
@@ -143,18 +144,19 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        y = torch.ones(size=(batch_size,)).to(self.generator.device)
+        y_real = torch.ones(size=(batch_size,), device=self.generator.device)
+        y_gen = torch.zeros(size=(batch_size,), device=self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
         x_gen = self.generator(z)
-        x = torch.cat((x_gen, x_real))
+        x = torch.cat((x_real, x_gen))
 
         preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
         fst_term = preds[:batch_size]
-        snd_term = 1 - preds[batch_size:]
+        snd_term = preds[batch_size:]
 
-        loss = F.binary_cross_entropy(fst_term, y) + F.binary_cross_entropy(snd_term, y)
+        loss = F.binary_cross_entropy(fst_term, y_real) + F.binary_cross_entropy(snd_term, y_gen)
         logging_dict = {"loss": loss}
 
         return loss, logging_dict
