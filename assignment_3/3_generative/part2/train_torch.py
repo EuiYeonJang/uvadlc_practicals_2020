@@ -111,7 +111,7 @@ class GAN(nn.Module):
         """
         batch_size = x_real.shape[0]
 
-        y = torch.zeros(size=(batch_size,), device=self.generator.device)
+        y = torch.ones(size=(batch_size,), device=self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
 
@@ -146,17 +146,18 @@ class GAN(nn.Module):
         
         y_real = torch.ones(size=(batch_size,), device=self.generator.device)
         y_gen = torch.zeros(size=(batch_size,), device=self.generator.device)
+        y = torch.cat((y_real, y_gen))
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
         x_gen = self.generator(z)
         x = torch.cat((x_real, x_gen))
 
-        preds = torch.sigmoid(self.discriminator(x)).squeeze()
+        preds = self.discriminator(x).squeeze()
 
         fst_term = preds[:batch_size]
         snd_term = preds[batch_size:]
 
-        loss = F.binary_cross_entropy(fst_term, y_real) + F.binary_cross_entropy(snd_term, y_gen)
+        loss = F.binary_cross_entropy(preds, y)
         logging_dict = {"loss": loss}
 
         return loss, logging_dict
@@ -304,9 +305,9 @@ def main(args):
     # Create two separate optimizers for generator and discriminator
     # You can use the Adam optimizer for both models.
     # It is recommended to reduce the momentum (beta1) to e.g. 0.5
-    optimizer_gen = torch.optim.AdamW(model.generator.parameters(), \
+    optimizer_gen = torch.optim.Adam(model.generator.parameters(), \
             lr=args.lr, betas=[0.5, 0.999])
-    optimizer_disc = torch.optim.AdamW(model.discriminator.parameters(), \
+    optimizer_disc = torch.optim.Adam(model.discriminator.parameters(), \
             lr=args.lr, betas=[0.5, 0.999])
  
 
