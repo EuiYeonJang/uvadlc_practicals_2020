@@ -7,7 +7,8 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --time=00:20:00
 #SBATCH --mem=32000M
-#SBATCH --output=sent.out
+#SBATCH --array=1-9%8
+#SBATCH --output=./exp_%a.out
 
 module purge
 module load 2019
@@ -20,5 +21,8 @@ module load Anaconda3/2018.12
 # Activate your environment
 source activate dl2020
 
+HPARAMS_FILE=./hyperparam.txt
+
 # Run your code
-srun python -u train_torch.py
+srun python -u train_torch.py $(head -$SLURM_ARRAY_TASK_ID $HPARAMS_FILE | tail -1)
+
