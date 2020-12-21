@@ -239,7 +239,7 @@ def interpolate_and_save(model, epoch, summary_writer, batch_size=4,
     # You also have to implement this function in a later question of the assignemnt. 
     # By default it is skipped to allow you to test your other code so far. 
     model.eval()
-    
+
     inters = model.interpolate(batch_size, interpolation_steps)
     grid = make_grid(inters, normalize=True, nrow=interpolation_steps+2)
     save_image(grid, f"{summary_writer.log_dir}/interpolation_image_epoch_{epoch}.png")
