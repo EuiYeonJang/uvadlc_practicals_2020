@@ -104,14 +104,17 @@ class GAN(nn.Module):
         steps *=  pair_difference
         base += steps
         
-        interpolations = torch.vstack((start, base, end))
+        interpolations = torch.cat((start, base, end))
 
         imglist = list()
         for i in range(0, interpolation_steps+2):
             img = torch.sigmoid(self.generator(interpolations[i]))
+            imglist.append(img)
 
-        imglist = torch.vstack(imglist)
-        imglist = imglist.permute(1, 0, 2, 3, 4)
+        imglist = torch.cat(imglist)
+        print("img", img.shape)
+        print("imglist", imglist.shape)
+        #imglist = imglist.permute(1, 0, 2, 3, 4)
         
         return imglist
 
@@ -356,7 +359,7 @@ def main(args):
                   optimizer_gen, optimizer_disc)
 
         # Logging images
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 1 == 0:
             generate_and_save(model, epoch+1, summary_writer)
             interpolate_and_save(model, epoch+1, summary_writer)
 
