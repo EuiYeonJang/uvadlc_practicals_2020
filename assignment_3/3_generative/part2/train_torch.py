@@ -165,7 +165,8 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
+        # y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
+        y_real = torch.from_numpy(np.random.uniform(0.7,1.2, size=(64))).to(self.generator.device)
         y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
