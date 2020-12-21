@@ -5,7 +5,7 @@
 #SBATCH --job-name=GANs
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
-#SBATCH --time=00:20:00
+#SBATCH --time=02:20:00
 #SBATCH --mem=32000M
 #SBATCH --output=gans.out
 
@@ -21,4 +21,4 @@ module load Anaconda3/2018.12
 source activate dl2020
 
 # Run your code
-srun python -u train_torch.py --epochs 50
+srun python -u train_torch.py

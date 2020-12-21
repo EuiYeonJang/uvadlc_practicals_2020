@@ -356,7 +356,7 @@ def main(args):
                   optimizer_gen, optimizer_disc)
 
         # Logging images
-        if (epoch + 1) % 1 == 0:
+        if (epoch + 1) % 10 == 0:
             generate_and_save(model, epoch+1, summary_writer)
             interpolate_and_save(model, epoch+1, summary_writer)
 
