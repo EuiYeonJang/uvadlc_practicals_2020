@@ -175,7 +175,7 @@ class GAN(nn.Module):
         preds_real = torch.sigmoid(self.discriminator(x_real)).squeeze()
         preds_gen = torch.sigmoid(self.discriminator(x_gen)).squeeze()
 
-        loss = F.binary_cross_entropy(preds_real, y_real) + F.binary_cross_entropy(preds_gen, y_gen) 
+        loss = F.binary_cross_entropy(preds_real, y_real) + F.binary_cross_entropy(preds_gen, y_) 
 
         preds = (preds > 0.5).float()
         accuracy = (y==preds).sum().item() / len(y)
@@ -214,7 +214,7 @@ def generate_and_save(model, epoch, summary_writer, batch_size=64):
     save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
 
 
-def interpolate_and_save(model, epoch, summary_writer, batch_size=64,
+def interpolate_and_save(model, epoch, summary_writer, batch_size=4,
                          interpolation_steps=5):
     """
     Function that generates and save the interpolations from the GAN.
