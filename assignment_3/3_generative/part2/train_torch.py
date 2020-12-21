@@ -104,7 +104,7 @@ class GAN(nn.Module):
         steps *=  pair_difference
         base += steps
         
-        interpolations = torch.cat((start, base, end))
+        interpolations = torch.cat((start, base, end)).to(self.generator.device)
 
         imglist = list()
         for i in range(0, interpolation_steps+2):
