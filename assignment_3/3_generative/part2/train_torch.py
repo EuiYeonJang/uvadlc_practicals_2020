@@ -107,7 +107,7 @@ class GAN(nn.Module):
         interpolations = torch.vstack((start, base, end))
 
         imglist = list()
-        for i in range(1, interpolation_steps+2):
+        for i in range(0, interpolation_steps+2):
             img = torch.sigmoid(self.generator(interpolations[i]))
 
         imglist = torch.vstack(imglist)
