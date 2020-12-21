@@ -165,22 +165,22 @@ class GAN(nn.Module):
         # For instance, how about the accuracy of the discriminator?
         batch_size = x_real.shape[0]
         
-        # y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
-        y_real = torch.from_numpy(np.random.uniform(0.7,1.2, size=(batch_size))).to(self.generator.device)
+        y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
+        # y_real = torch.from_numpy(np.random.uniform(0.7,1.2, size=(batch_size))).to(self.generator.device)
         y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
+        y = torch.cat((y_real, y_gen))
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
         x_gen = self.generator(z)
+        x = torch.cat((x_real, x_gen))
 
-        preds_real = torch.sigmoid(self.discriminator(x_real)).squeeze()
-        preds_gen = torch.sigmoid(self.discriminator(x_gen)).squeeze()
+        preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
-        loss = F.binary_cross_entropy(preds_real, y_real) + F.binary_cross_entropy(preds_gen, y_gen) 
+        loss = F.binary_cross_entropy(x, y)
 
-        preds_real = (preds_real > 0.5).float().to(self.generator.device)
-        preds_gen = (preds_gen > 0.5).float().to(self.generator.device) 
+        preds = (preds > 0.5).float().to(self.generator.device)
         
-        accuracy = ((y_real==preds_real).sum() + (y_gen==preds_gen).sum()) / torch.Tensor([2*batch_size]).to(self.generator.device)
+        accuracy = (y==preds).sum() / torch.Tensor([2*batch_size]).to(self.generator.device)
 
         logging_dict = {"loss": loss, "acc": accuracy}
 
