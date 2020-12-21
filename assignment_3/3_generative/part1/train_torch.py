@@ -123,6 +123,8 @@ def sample_and_save(model, epoch, summary_writer, batch_size=64):
     # - Use the torchvision function "make_grid" to create a grid of multiple images
     # - Use the torchvision function "save_image" to save an image grid to disk
 
+    model.eval()
+    
     samples, means = model.sample(batch_size)
     grid = make_grid(samples)
     save_image(grid, f"{summary_writer.log_dir}/sample_image_epoch_{epoch}.png")
