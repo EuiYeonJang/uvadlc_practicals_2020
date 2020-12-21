@@ -167,7 +167,6 @@ class GAN(nn.Module):
         
         y_real = torch.ones(size=(batch_size,)).to(self.generator.device)
         y_gen = torch.zeros(size=(batch_size,)).to(self.generator.device)
-        y = torch.cat((y_real, y_gen))
         
         z = torch.randn(size=(batch_size, self.z_dim)).to(self.generator.device)
         x_gen = self.generator(z)
@@ -175,10 +174,12 @@ class GAN(nn.Module):
         preds_real = torch.sigmoid(self.discriminator(x_real)).squeeze()
         preds_gen = torch.sigmoid(self.discriminator(x_gen)).squeeze()
 
-        loss = F.binary_cross_entropy(preds_real, y_real) + F.binary_cross_entropy(preds_gen, y_) 
+        loss = F.binary_cross_entropy(preds_real, y_real) + F.binary_cross_entropy(preds_gen, y_gen) 
 
-        preds = (preds > 0.5).float()
-        accuracy = (y==preds).sum().item() / len(y)
+        preds_real = (preds_real > 0.5).float().to(self.generator.device)
+        preds_gen = (preds_gen > 0.5).float().to(self.generator.device) 
+        
+        accuracy = ((y_real==preds_real).sum() + (y_gen==preds_gen).sum())/ (2*batch_size)
 
         logging_dict = {"loss": loss, "acc": accuracy}
 
@@ -276,7 +277,7 @@ def train_gan(model, train_loader,
 
         # Discriminator update
         loss_disc, dict_disc = model.discriminator_step(imgs)
-        # logger_disc.add_values(dict_disc)
+        logger_disc.add_values(dict_disc)
         loss_disc.backward()
 
         optimizer_disc.step()
