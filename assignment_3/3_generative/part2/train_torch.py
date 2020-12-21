@@ -177,7 +177,7 @@ class GAN(nn.Module):
 
         preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
-        loss = F.binary_cross_entropy(x, y)
+        loss = F.binary_cross_entropy(preds, y)
 
         preds = (preds > 0.5).float().to(self.generator.device)
         
