@@ -89,10 +89,31 @@ class GAN(nn.Module):
             x - Generated images of shape [B,interpolation_steps+2,C,H,W]
         """
 
-        z_pairs = torch.randn(size=(2, batch_size, self.z_dim))
-        x = None
-        raise NotImplementedError
-        return x
+        start = torch.randn(size=(1, batch_size, self.z_dim))
+        end = torch.randn(size=(1, batch_size, self.z_dim))
+
+        # # print(z_pairs[0])
+        pair_difference = (end - start) / interpolation_steps
+
+        base = start.repeat((interpolation_steps, 1)).reshape((interpolation_steps, batch_size, -1))
+        
+        steps  = torch.ones(size=(interpolation_steps, batch_size, z_dim))
+        for i in range(1, interpolation_steps):
+            steps[i].fill_(i+1)
+
+        steps = (steps *  pair_difference)
+        base += steps
+        
+        interpolations = torch.vstack((start, base, end))
+
+        imglist = list()
+        for i in range(1, interpolation_steps+2):
+            img = torch.sigmoid(self.generator(interpolations[i]))
+
+        imglist = torch.vstack(imglist)
+        imglist = imglist.permute(1, 0, 2, 3, 4)
+        
+        return imglist
 
     def generator_step(self, x_real):
         """
@@ -215,7 +236,7 @@ def interpolate_and_save(model, epoch, summary_writer, batch_size=64,
     
     # You also have to implement this function in a later question of the assignemnt. 
     # By default it is skipped to allow you to test your other code so far. 
-    print("WARNING: Interpolation function has not been implemented yet.")
+    model.interpolate(batch_size, interpolation_steps)
     pass
 
 
@@ -233,7 +254,6 @@ def train_gan(model, train_loader,
         optimizer - The optimizer used to update the parameters
     """
     model.train()
-
     for imgs, _ in train_loader:
         imgs = imgs.to(model.device)
 
@@ -326,6 +346,7 @@ def main(args):
     epoch_iterator = (trange(args.epochs, desc="GAN")
                       if args.progress_bar else range(args.epochs))
     for epoch in epoch_iterator:
+        print(f":: EPOCH {epoch} ::")
         # Training epoch
         train_iterator = (tqdm(train_loader, desc="Training", leave=False)
                           if args.progress_bar else train_loader)
