@@ -111,11 +111,8 @@ class GAN(nn.Module):
             img = torch.sigmoid(self.generator(interpolations[i]))
             imglist.append(img)
 
-        imglist = torch.cat(imglist)
-        print("img", img.shape)
-        print("imglist", imglist.shape)
-        #imglist = imglist.permute(1, 0, 2, 3, 4)
-        
+        imglist = torch.stack(imglist)
+        imglist = imglist.permute(1, 0, 2, 3, 4).flatten(end_dim=1)
         return imglist
 
     def generator_step(self, x_real):
