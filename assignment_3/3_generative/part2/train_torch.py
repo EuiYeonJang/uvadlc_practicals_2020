@@ -179,7 +179,7 @@ class GAN(nn.Module):
         preds_real = (preds_real > 0.5).float().to(self.generator.device)
         preds_gen = (preds_gen > 0.5).float().to(self.generator.device) 
         
-        accuracy = ((y_real==preds_real).sum() + (y_gen==preds_gen).sum())/ (2*batch_size)
+        accuracy = ((y_real==preds_real).sum() + (y_gen==preds_gen).sum()) / torch.Tensor([2*batch_size]).to(self.generator.device)
 
         logging_dict = {"loss": loss, "acc": accuracy}
 
