@@ -107,7 +107,7 @@ class DiscriminatorMLP(nn.Module):
 
             for i in range(1, len(hidden_dims)):
                 list_modules.extend([nn.Linear(hidden_dims[i-1], hidden_dims[i]), \
-                    nn.Dropout(dp_rate), nn.LeakyReLU(negative_slope=0.2)])
+                    nn.Dropout(dp_rate), nn.LeakyReLU(negative_slope=0.2), nn.BatchNorm2d(hidden_dims[i]),])
             
             list_modules.extend([nn.Linear(hidden_dims[-1], 1)])
 
