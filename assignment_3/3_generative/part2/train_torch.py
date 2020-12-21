@@ -95,13 +95,13 @@ class GAN(nn.Module):
         # # print(z_pairs[0])
         pair_difference = (end - start) / interpolation_steps
 
-        base = start.repeat((interpolation_steps, 1)).reshape((interpolation_steps, batch_size, -1))
+        base = start[0].repeat((interpolation_steps, 1)).reshape((interpolation_steps, batch_size, -1))
         
-        steps  = torch.ones(size=(interpolation_steps, batch_size, z_dim))
+        steps  = torch.ones(size=(interpolation_steps, batch_size, self.z_dim))
         for i in range(1, interpolation_steps):
             steps[i].fill_(i+1)
 
-        steps = (steps *  pair_difference)
+        steps *=  pair_difference
         base += steps
         
         interpolations = torch.vstack((start, base, end))
@@ -236,8 +236,9 @@ def interpolate_and_save(model, epoch, summary_writer, batch_size=64,
     
     # You also have to implement this function in a later question of the assignemnt. 
     # By default it is skipped to allow you to test your other code so far. 
-    model.interpolate(batch_size, interpolation_steps)
-    pass
+    inters = model.interpolate(batch_size, interpolation_steps)
+    grid = make_grid(inters, normalize=True, nrow=interpolation_steps+2)
+    save_image(grid, f"{summary_writer.log_dir}/interpolation_image_epoch_{epoch}.png")
 
 
 def train_gan(model, train_loader,
