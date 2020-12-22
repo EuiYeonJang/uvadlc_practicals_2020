@@ -177,7 +177,7 @@ class GAN(nn.Module):
 
         preds = torch.sigmoid(self.discriminator(x)).squeeze()
 
-        loss = F.binary_cross_entropy(preds, y)
+        loss = -F.binary_cross_entropy(preds, y)
 
         preds = (preds > 0.5).float().to(self.generator.device)
         
@@ -211,7 +211,7 @@ def generate_and_save(model, epoch, summary_writer, batch_size=64):
     # - You can access the logging directory via summary_writer.log_dir
     # - Use torchvision function "make_grid" to create a grid of multiple images
     # - Use torchvision function "save_image" to save an image grid to disk
-    # model.eval()
+    model.eval()
 
     samples = model.sample(batch_size)
     grid = make_grid(samples, normalize=True, nrow=8)
@@ -240,7 +240,7 @@ def interpolate_and_save(model, epoch, summary_writer, batch_size=4,
     
     # You also have to implement this function in a later question of the assignemnt. 
     # By default it is skipped to allow you to test your other code so far. 
-    # model.eval()
+    model.eval()
 
     inters = model.interpolate(batch_size, interpolation_steps)
     grid = make_grid(inters, normalize=True, nrow=interpolation_steps+2)
