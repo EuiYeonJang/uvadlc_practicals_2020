@@ -92,7 +92,6 @@ class GAN(nn.Module):
         start = torch.randn(size=(1, batch_size, self.z_dim))
         end = torch.randn(size=(1, batch_size, self.z_dim))
 
-        # # print(z_pairs[0])
         pair_difference = (end - start) / interpolation_steps
 
         base = start[0].repeat((interpolation_steps, 1)).reshape((interpolation_steps, batch_size, -1))
@@ -101,8 +100,7 @@ class GAN(nn.Module):
         for i in range(1, interpolation_steps):
             steps[i].fill_(i+1)
 
-        steps *=  pair_difference
-        base += steps
+        base += steps * pair_difference
         
         interpolations = torch.cat((start, base, end)).to(self.generator.device)
 
@@ -180,7 +178,6 @@ class GAN(nn.Module):
         loss = -F.binary_cross_entropy(preds, y)
 
         preds = (preds > 0.5).float().to(self.generator.device)
-        
         accuracy = (y==preds).sum() / torch.Tensor([2*batch_size]).to(self.generator.device)
 
         logging_dict = {"loss": loss, "acc": accuracy}
